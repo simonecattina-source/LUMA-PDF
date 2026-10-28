@@ -54,3 +54,33 @@ html,body{touch-action:pan-x pan-y}
 @media(hover:none) and (pointer:coarse){
   .input-wrap input,.select-wrap select{font-size:16px}
 }
+
+/* Impedisce ai nomi foto molto lunghi di allargare la griglia e la pagina. */
+.workspace > .pages-section,
+.workspace > .settings-section {
+  min-width: 0;
+}
+.photo-list,
+.photo-card {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.photo-meta {
+  min-width: 0;
+  flex: 1 1 0%;
+  overflow: hidden;
+}
+.photo-name,
+.photo-sub {
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 760px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
