@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0a1120">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="LUMA PDF: trasforma le tue fotografie in un unico PDF direttamente nel browser. Nessun account, nessun upload, nessun archivio.">
+  <meta name="referrer" content="no-referrer">
+  <title>LUMA PDF — Da foto a PDF, in privato</title>
+  <link rel="icon" type="image/svg+xml" href="./assets/icon.svg">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <div class="ambient-glow" aria-hidden="true"></div>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="LUMA PDF - Home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 28 28" fill="none"><path d="M8 3.75h8.7l5.55 5.55V23A2.25 2.25 0 0 1 20 25.25H8A2.25 2.25 0 0 1 5.75 23V6A2.25 2.25 0 0 1 8 3.75Z" stroke="currentColor" stroke-width="1.75"/><path d="M16.5 3.75V9.5h5.75M9.5 17.5l2.5-2.5 2 2 2.5-3 3 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10.25" cy="11" r="1.2" fill="currentColor"/></svg>
+        </span>
+        <span class="brand-text">LUMA <span class="brand-sub">PDF</span></span>
+      </a>
+      <div class="topbar-privacy" aria-label="Elaborazione locale, senza invio delle foto">
+        <span class="pulse-dot"></span>
+        <span>100% sul tuo dispositivo</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="heroTitle">
+        <div class="hero-content">
+          <div class="eyebrow"><span class="eyebrow-line"></span> IL TUO CONVERTITORE PRIVATO</div>
+          <h1 id="heroTitle">Le tue foto.<br><span>Un solo PDF.</span></h1>
+          <p>Scatta o scegli le fotografie, mettile nell'ordine giusto e crea il tuo documento. Tutto direttamente qui, senza caricare nulla online.</p>
+          <div class="hero-features" aria-label="Caratteristiche">
+            <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg> Nessun upload</span>
+            <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18v12H3zM7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/><path d="M8 12h8M8 16h5"/></svg> Nessun archivio</span>
+            <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20M2 12h20"/></svg> Gratuito</span>
+          </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="art-orbit art-orbit-one"></div><div class="art-orbit art-orbit-two"></div>
+          <div class="art-photo art-photo-back"><div class="art-sun"></div><div class="art-hill"></div></div>
+          <div class="art-photo art-photo-front"><div class="art-small-sun"></div><div class="art-mountains"></div></div>
+          <div class="art-document"><span>PDF</span><i></i><i></i><i></i></div>
+          <div class="art-spark art-spark-one">✦</div><div class="art-spark art-spark-two">✧</div>
+        </div>
+      </section>
+
+      <div class="section-heading">
+        <div><span class="step-number">01</span><span class="section-title">Le tue fotografie</span></div>
+        <span class="section-caption">Scegli come iniziare</span>
+      </div>
+      <section id="dropzone" class="upload-area" aria-label="Seleziona o trascina le fotografie">
+        <div class="upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m4 17 5-5 3 3 3-4 5 6"/></svg></div>
+        <h2>Da dove iniziamo?</h2>
+        <p>Scatta una nuova foto o scegli le immagini che hai già.</p>
+        <div class="upload-actions">
+          <button id="cameraButton" class="btn btn-primary" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3l2-3h6l2 3h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"/><circle cx="12" cy="13" r="4"/></svg> Scatta una foto</button>
+          <button id="galleryButton" class="btn btn-outline" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 5-5 4 4 3-3 6 5"/></svg> Carica fotografie</button>
+        </div>
+        <span class="upload-hint">JPG, PNG, WebP e immagini supportate dal browser <span class="dot-sep">·</span> Puoi selezionare più foto</span>
+      </section>
+      <input id="cameraInput" class="visually-hidden" type="file" accept="image/*" capture="environment" aria-label="Fotocamera">
+      <input id="galleryInput" class="visually-hidden" type="file" accept="image/*,.heic,.heif" multiple aria-label="Seleziona foto">
+
+      <div class="workspace">
+        <section class="pages-section" aria-labelledby="pagesTitle">
+          <div class="section-heading section-heading-workspace">
+            <div><span class="step-number">02</span><span class="section-title" id="pagesTitle">Organizza le pagine</span></div>
+            <span class="count-pill" id="pageCount">0 pagine</span>
+          </div>
+          <div class="pages-panel">
+            <div id="emptyState" class="empty-state">
+              <div class="empty-icon" aria-hidden="true"><svg viewBox="0 0 68 68"><rect x="17" y="12" width="36" height="43" rx="5"/><path d="M24 22h22M24 30h22M24 38h13"/><path d="m13 19-3 3M53 51l5 5"/></svg></div>
+              <strong>Il tuo documento è ancora vuoto</strong>
+              <span>Le fotografie che aggiungi appariranno qui, pronte da riordinare.</span>
+            </div>
+            <ol id="photoList" class="photo-list" aria-label="Fotografie nell'ordine del PDF"></ol>
+            <div id="pagesFooter" class="pages-footer" hidden>
+              <button id="addMoreButton" class="text-action" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Aggiungi altre foto</button>
+              <button id="clearButton" class="text-action text-action-danger" type="button">Svuota tutto</button>
+            </div>
+          </div>
+        </section>
+
+        <aside class="settings-section" aria-labelledby="settingsTitle">
+          <div class="section-heading section-heading-workspace">
+            <div><span class="step-number">03</span><span class="section-title" id="settingsTitle">Crea il tuo PDF</span></div>
+          </div>
+          <div class="settings-panel">
+            <label for="filename" class="field-label">Nome del documento</label>
+            <div class="input-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h8l5 5v13H4V3h3Z"/><path d="M14 3v6h6M8 14h8M8 18h5"/></svg><input id="filename" type="text" maxlength="80" value="Il mio documento" spellcheck="false" autocomplete="off" aria-describedby="nameHint"><span class="file-ext">.pdf</span></div>
+            <span class="field-hint" id="nameHint">Sarà il nome del file scaricato.</span>
+
+            <label for="orientation" class="field-label field-label-spaced">Orientamento delle pagine</label>
+            <div class="select-wrap"><select id="orientation"><option value="auto">Automatico (consigliato)</option><option value="portrait">Sempre verticale</option><option value="landscape">Sempre orizzontale</option></select><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+            <span class="field-hint">Formato A4, una fotografia per pagina.</span>
+
+            <label for="quality" class="field-label field-label-spaced">Qualità delle immagini</label>
+            <div class="select-wrap"><select id="quality"><option value="balanced">Bilanciata · PDF più leggero</option><option value="high">Alta · Più dettagli</option></select><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+
+            <div class="document-summary">
+              <div><span>Fotografie</span><strong id="summaryCount">0</strong></div>
+              <div><span>Formato</span><strong>A4</strong></div>
+              <div><span>Invio a server</span><strong class="success-label">Nessuno</strong></div>
+            </div>
+
+            <button id="generateButton" class="btn btn-generate" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h8l5 5v13H4V3h3Z"/><path d="M14 3v6h6M8 13h8M8 17h8"/></svg><span id="generateLabel">Crea PDF</span><svg class="generate-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M13 5l7 7-7 7"/></svg></button>
+            <div id="progressArea" class="progress-area" hidden><div class="progress-track"><div id="progressBar"></div></div><span id="progressLabel" aria-live="polite">Preparazione...</span></div>
+            <div id="resultMessage" class="result-message" role="status" aria-live="polite" hidden></div>
+            <p class="download-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v4h16v-4"/></svg> Il PDF sarà scaricato direttamente sul tuo dispositivo.</p>
+          </div>
+        </aside>
+      </div>
+
+      <section class="privacy-strip" aria-label="Informazioni sulla privacy">
+        <div class="privacy-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1"/></svg></div>
+        <div><strong>Le tue foto restano tue.</strong><p>Nessun account, database o caricamento su server. Le foto vengono elaborate temporaneamente nella memoria del browser e non sono conservate dall'app. Ricaricando la pagina, il documento in lavorazione viene azzerato.</p></div>
+      </section>
+    </main>
+    <footer class="site-footer"><span>LUMA <span class="brand-sub">PDF</span></span><span>Creato per funzionare senza servizi esterni.</span></footer>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
