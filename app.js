@@ -166,12 +166,13 @@
 
   function updateBusyState() {
     const busy = generating || adding;
+    const hasName = Boolean(elements.filename.value.trim().replace(/\.pdf$/i, '').trim());
     for (const item of [elements.cameraButton, elements.galleryButton,
       elements.addMoreButton, elements.clearButton,
       elements.filename, elements.orientation, elements.quality]) {
       item.disabled = busy;
     }
-    elements.generateButton.disabled = busy || photos.length === 0;
+    elements.generateButton.disabled = busy || photos.length === 0 || !hasName;
     for (const button of elements.photoList.querySelectorAll('button')) button.disabled = busy || button.dataset.boundary === 'true';
   }
 
@@ -449,16 +450,16 @@
   }
 
   function normalizedName(value) {
-    return (value || 'Il mio documento')
+    return (value || '')
       .replace(/\.pdf$/i, '')
       .replace(/[\\/:*?"<>|\x00-\x1f]/g, '-')
       .trim()
       .replace(/[. ]+$/g, '')
-      .slice(0, 80) || 'Il mio documento';
+      .slice(0, 80);
   }
 
   async function createPdf() {
-    if (generating || adding || !photos.length) return;
+    if (generating || adding || !photos.length || !normalizedName(elements.filename.value)) return;
     generating = true;
     setResult('');
     elements.progressArea.hidden = false;
@@ -540,6 +541,7 @@
       if (photo) { photo.rotation = (photo.rotation + 90) % 360; setResult(''); render(); }
     }
   });
+  elements.filename.addEventListener('input', updateBusyState);
   elements.generateButton.addEventListener('click', createPdf);
 
   // Trascinamento dei file sull'area di importazione; nessuna rete coinvolta.
@@ -617,5 +619,8 @@
     }
   });
 
+  window.LumaDialog = Object.freeze({
+    info: showInfoModal, success: showSuccessModal, error: showErrorModal, confirm: showConfirmModal
+  });
   render();
 })();
