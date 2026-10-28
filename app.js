@@ -35,7 +35,15 @@
     progressBar: document.getElementById('progressBar'),
     progressLabel: document.getElementById('progressLabel'),
     resultMessage: document.getElementById('resultMessage'),
-    toast: document.getElementById('toast')
+    toast: document.getElementById('toast'),
+    modal: document.getElementById('themeModal'),
+    modalBackdrop: document.getElementById('themeModalBackdrop'),
+    modalPanel: document.getElementById('themeModalPanel'),
+    modalIcon: document.getElementById('themeModalIcon'),
+    modalTitle: document.getElementById('themeModalTitle'),
+    modalBody: document.getElementById('themeModalBody'),
+    modalCancel: document.getElementById('themeModalCancel'),
+    modalConfirm: document.getElementById('themeModalConfirm')
   };
 
   /** @type {{id: number, file: File, url: string, width: number, height: number, rotation: number}[]} */
@@ -46,6 +54,8 @@
   let toastTimer = null;
   let downloadUrl = null;
   let downloadRevokeTimer = null;
+  let activeModalResolver = null;
+  let lastFocusedElement = null;
 
   const icons = {
     up: '<path d="m5 14 7-7 7 7"/>',
@@ -68,6 +78,62 @@
     elements.toast.textContent = message;
     elements.toast.hidden = false;
     toastTimer = setTimeout(() => { elements.toast.hidden = true; }, 4500);
+  }
+
+  function closeModal(result = false) {
+    if (elements.modal.hidden) return;
+    elements.modal.hidden = true;
+    elements.modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('modal-open');
+    const resolver = activeModalResolver;
+    activeModalResolver = null;
+    if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') lastFocusedElement.focus();
+    lastFocusedElement = null;
+    if (resolver) resolver(result);
+  }
+
+  function modalIcon(type) {
+    if (type === 'success') return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.2 2.2 4.8-5.2"/></svg>' ;
+    if (type === 'error') return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.75 21 19.25H3L12 3.75Z"/><path d="M12 9v4.5"/><circle cx="12" cy="16.5" r="1" fill="currentColor" stroke="none"/></svg>' ;
+    if (type === 'confirm') return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="M9 12h6M12 9v6"/></svg>' ;
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10.5v5"/><circle cx="12" cy="7.5" r="1" fill="currentColor" stroke="none"/></svg>' ;
+  }
+
+  function openModal({ type = 'info', title, message, confirmText = 'OK', cancelText = 'Annulla', showCancel = false }) {
+    if (activeModalResolver) closeModal(false);
+    lastFocusedElement = document.activeElement;
+    elements.modal.hidden = false;
+    elements.modal.setAttribute('aria-hidden', 'false');
+    elements.modalPanel.dataset.variant = type;
+    elements.modalIcon.dataset.variant = type;
+    elements.modalIcon.innerHTML = modalIcon(type);
+    elements.modalTitle.textContent = title;
+    elements.modalBody.textContent = message;
+    elements.modalCancel.hidden = !showCancel;
+    elements.modalCancel.textContent = cancelText;
+    elements.modalConfirm.textContent = confirmText;
+    document.body.classList.add('modal-open');
+    return new Promise(resolve => {
+      activeModalResolver = resolve;
+      const buttonToFocus = showCancel ? elements.modalCancel : elements.modalConfirm;
+      requestAnimationFrame(() => buttonToFocus.focus());
+    });
+  }
+
+  function showInfoModal(title, message, confirmText = 'OK') {
+    return openModal({ type: 'info', title, message, confirmText });
+  }
+
+  function showSuccessModal(title, message, confirmText = 'OK') {
+    return openModal({ type: 'success', title, message, confirmText });
+  }
+
+  function showErrorModal(title, message, confirmText = 'Chiudi') {
+    return openModal({ type: 'error', title, message, confirmText });
+  }
+
+  function showConfirmModal(title, message, confirmText = 'Conferma', cancelText = 'Annulla') {
+    return openModal({ type: 'confirm', title, message, confirmText, cancelText, showCancel: true });
   }
 
   function setResult(message, error = false) {
@@ -276,7 +342,11 @@
       setResult('');
       showToast(`${added} ${added === 1 ? 'fotografia aggiunta' : 'fotografie aggiunte'} al documento.`);
     }
-    if (problems.length) setResult(problems.slice(0, 2).join(' '), true);
+    if (problems.length) {
+      const message = problems.slice(0, 2).join(' ');
+      setResult(message, true);
+      await showErrorModal('Avviso LUMA PDF', message);
+    }
   }
 
   function canvasToJpeg(canvas, quality) {
@@ -329,7 +399,7 @@
       this.object(1, '<< /Type /Catalog /Pages 2 0 R >>');
       const kids = Array.from({ length: count }, (_, i) => `${6 + i * 3} 0 R`).join(' ');
       this.object(2, `<< /Type /Pages /Kids [${kids}] /Count ${count} >>`);
-      this.object(3, '<< /Producer (PDF Star - elaborazione locale) /Creator (PDF Star) >>');
+      this.object(3, '<< /Producer (LUMA PDF - elaborazione locale) /Creator (LUMA PDF) >>');
     }
     add(value) {
       const bytes = typeof value === 'string' ? this.encoder.encode(value) : value;
@@ -418,11 +488,15 @@
       a.click();
       a.remove();
       downloadRevokeTimer = setTimeout(revokePreviousDownload, 60000);
-      setResult(`PDF creato: ${photos.length} ${photos.length === 1 ? 'pagina' : 'pagine'} · ${formatBytes(pdf.size)}. Il download è stato richiesto al browser.`);
+      const successMessage = `PDF creato: ${photos.length} ${photos.length === 1 ? 'pagina' : 'pagine'} · ${formatBytes(pdf.size)}. Il download è stato richiesto al browser.`;
+      setResult(successMessage);
       showToast('PDF creato! Controlla i download del dispositivo.');
+      await showSuccessModal('PDF pronto', successMessage, 'Perfetto');
     } catch (error) {
       console.error('Errore PDF (elaborazione locale):', error);
-      setResult(`Non è stato possibile creare il PDF. ${error?.message || 'Riprova con meno fotografie o con qualità bilanciata.'}`, true);
+      const errorMessage = `Non è stato possibile creare il PDF. ${error?.message || 'Riprova con meno fotografie o con qualità bilanciata.'}`;
+      setResult(errorMessage, true);
+      await showErrorModal('Creazione non riuscita', errorMessage);
     } finally {
       generating = false;
       elements.generateLabel.textContent = 'Crea PDF';
@@ -444,9 +518,15 @@
     event.target.value = '';
     addFiles(files);
   });
-  elements.clearButton.addEventListener('click', () => {
+  elements.clearButton.addEventListener('click', async () => {
     if (generating || adding || !photos.length) return;
-    if (window.confirm('Svuotare il documento? Le fotografie saranno rimosse dalla memoria di questa pagina.')) clearPhotos();
+    const confirmed = await showConfirmModal(
+      'Svuotare il documento?',
+      'Le fotografie saranno rimosse dalla memoria di questa pagina e il documento tornerà vuoto.',
+      'Svuota tutto',
+      'Annulla'
+    );
+    if (confirmed) clearPhotos();
   });
   elements.photoList.addEventListener('click', event => {
     const button = event.target.closest('button[data-action]');
@@ -494,10 +574,47 @@
     if (event.dataTransfer?.types.includes('Files') && !elements.dropzone.contains(event.target)) event.preventDefault();
   });
 
+  // Evita lo zoom gestuale in Safari su iPhone/iPad e il pinch multi-touch.
+  // Il normale scorrimento con un dito e la selezione di foto restano attivi.
+  for (const gestureType of ['gesturestart', 'gesturechange']) {
+    document.addEventListener(gestureType, event => {
+      if (event.cancelable) event.preventDefault();
+    }, { passive: false });
+  }
+  document.addEventListener('touchmove', event => {
+    if (event.touches.length > 1 && event.cancelable) event.preventDefault();
+  }, { passive: false });
+
   // Rimuove gli URL temporanei quando il browser lascia la pagina.
   window.addEventListener('pagehide', () => {
     for (const photo of photos) URL.revokeObjectURL(photo.url);
     revokePreviousDownload();
+  });
+
+  elements.modalBackdrop.addEventListener('click', event => {
+    if (event.target === elements.modalBackdrop) closeModal(false);
+  });
+  elements.modalCancel.addEventListener('click', () => closeModal(false));
+  elements.modalConfirm.addEventListener('click', () => closeModal(true));
+  document.addEventListener('keydown', event => {
+    if (elements.modal.hidden) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeModal(false);
+    }
+    if (event.key === 'Tab') {
+      const focusables = [elements.modalCancel, elements.modalConfirm].filter(button => !button.hidden && !button.disabled);
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
   });
 
   render();

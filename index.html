@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#0a1120">
   <meta name="color-scheme" content="dark">
   <meta name="description" content="LUMA PDF: trasforma le tue fotografie in un unico PDF direttamente nel browser. Nessun account, nessun upload, nessun archivio.">
@@ -122,6 +122,21 @@
       </section>
     </main>
     <footer class="site-footer"><span>LUMA <span class="brand-sub">PDF</span></span><span>Creato per funzionare senza servizi esterni.</span></footer>
+  </div>
+  <div id="themeModal" class="modal-shell" aria-hidden="true" hidden>
+    <div id="themeModalBackdrop" class="modal-backdrop">
+      <div id="themeModalPanel" class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="themeModalTitle" aria-describedby="themeModalBody" data-variant="info">
+        <div id="themeModalIcon" class="modal-icon" data-variant="info" aria-hidden="true"></div>
+        <div class="modal-copy">
+          <h2 id="themeModalTitle" class="modal-title">Avviso</h2>
+          <p id="themeModalBody" class="modal-body"></p>
+        </div>
+        <div class="modal-actions">
+          <button id="themeModalCancel" class="btn btn-modal-secondary" type="button">Annulla</button>
+          <button id="themeModalConfirm" class="btn btn-modal-primary" type="button">OK</button>
+        </div>
+      </div>
+    </div>
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 </body>

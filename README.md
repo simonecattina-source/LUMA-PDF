@@ -8,7 +8,12 @@ LUMA PDF è un’app Web **100% statica** per trasformare fotografie in un unico
 - Anteprime, riordino delle pagine, rotazione di 90° ed eliminazione.
 - Formato A4 con orientamento automatico, verticale oppure orizzontale.
 - Qualità bilanciata o alta; creazione e download del PDF direttamente nel browser.
+- Popup di conferma, errore ed esito con grafica LUMA PDF, senza dialoghi standard del browser.
+- Zoom gestuale disabilitato dove supportato (pinch e doppio tocco); lo scorrimento resta normale.
 - **Niente account, database, cloud per file, pubblicità, tracciamento, cookie, API esterne o dipendenze da CDN.**
+
+## Dimensioni della pagina e zoom
+La pagina si adatta alla larghezza del dispositivo e mantiene la scala iniziale. Su touchscreen viene impedito lo zoom con due dita e quello da doppio tocco, nei limiti consentiti dal browser; iOS/Safari e funzioni di accessibilità possono comunque imporre comportamenti propri. Il font dei campi è almeno 16 px sui dispositivi touch per evitare lo zoom automatico di Safari durante la digitazione. Disattivare lo zoom riduce l’accessibilità per chi ha necessità di ingrandire i contenuti. Lo scorrimento verticale resta attivo.
 
 ## Privacy e limiti
 - Immagini e PDF sono trattati nella memoria temporanea del browser e **non vengono inviati a server**.

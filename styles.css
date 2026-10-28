@@ -22,3 +22,35 @@ html{min-height:100%;background:var(--bg)}body{margin:0;min-width:320px;backgrou
 .site-footer .brand-sub{font-weight:650}
 @media(max-width:480px){.brand-text{font-size:20px}.brand{gap:8px}.topbar-privacy{gap:6px;padding:7px 9px}}
 
+
+
+body.modal-open{overflow:hidden}
+.modal-shell[hidden]{display:none!important}
+.modal-backdrop{position:fixed;inset:0;z-index:40;background:rgba(2,8,16,.72);backdrop-filter:blur(10px);display:grid;place-items:center;padding:20px}
+.modal-panel{width:min(100%,420px);border-radius:22px;border:1px solid rgba(143,188,173,.25);background:linear-gradient(180deg,rgba(18,29,45,.98),rgba(11,20,33,.98));box-shadow:0 30px 90px rgba(0,0,0,.52),0 0 0 1px rgba(255,255,255,.03) inset;padding:24px 22px 20px;color:#edf4fb}
+.modal-icon{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;margin-bottom:16px;border:1px solid #35526b;background:radial-gradient(circle at 30% 30%,rgba(198,232,220,.18),rgba(69,110,106,.2))}
+.modal-icon svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.modal-icon[data-variant="info"]{color:#cbe6f6;background:radial-gradient(circle at 30% 30%,rgba(128,185,216,.2),rgba(47,81,109,.22));border-color:#33536e}
+.modal-icon[data-variant="success"]{color:#c2f4d3;background:radial-gradient(circle at 30% 30%,rgba(123,213,167,.22),rgba(34,88,68,.26));border-color:#356756}
+.modal-icon[data-variant="error"]{color:#ffd7d7;background:radial-gradient(circle at 30% 30%,rgba(255,134,148,.2),rgba(98,39,53,.28));border-color:#71404c}
+.modal-icon[data-variant="confirm"]{color:#d4f4e0;background:radial-gradient(circle at 30% 30%,rgba(149,231,191,.16),rgba(42,90,75,.24));border-color:#416e61}
+.modal-title{margin:0 0 10px;font-size:24px;letter-spacing:-.04em;line-height:1.05}
+.modal-body{margin:0;color:#a8bbc9;font-size:14px;line-height:1.65}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px}
+.btn-modal-secondary,.btn-modal-primary{min-height:46px;padding:11px 16px;border-radius:12px;font-size:12px;font-weight:800;letter-spacing:.01em}
+.btn-modal-secondary{background:#16263a;border:1px solid #33485e;color:#dbe7f3;box-shadow:none}
+.btn-modal-secondary:hover{background:#1b2f47}
+.btn-modal-primary{background:linear-gradient(180deg,#b7efd4,#93d9b7);color:#10291f;border:1px solid #8fd7b0;box-shadow:0 10px 24px rgba(96,179,131,.18)}
+.btn-modal-primary:hover{background:linear-gradient(180deg,#c4f6dc,#a1e3c2)}
+@media(max-width:480px){.modal-backdrop{padding:14px}.modal-panel{padding:20px 16px 16px;border-radius:18px}.modal-title{font-size:21px}.modal-body{font-size:13px}.modal-actions{margin-top:18px;gap:8px}.btn-modal-secondary,.btn-modal-primary{flex:1;min-height:44px}}
+
+
+/* LUMA PDF — pagina alla scala iniziale sui dispositivi touch.
+   Consente lo scorrimento ma impedisce pinch-to-zoom e double-tap zoom
+   dove il browser supporta touch-action. */
+html,body{touch-action:pan-x pan-y}
+/* Safari iOS ingrandisce la pagina quando un input ha un font sotto 16px.
+   Manteniamo i campi a 16px sui dispositivi touch per evitarlo. */
+@media(hover:none) and (pointer:coarse){
+  .input-wrap input,.select-wrap select{font-size:16px}
+}
