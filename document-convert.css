@@ -1,0 +1,43 @@
+/* Quarta modalità: stesso tema LUMA PDF approvato; nessuna modifica all'icona iOS. */
+.mode-switch {grid-template-columns:repeat(4,minmax(0,1fr));}
+.mode-tab {min-width:0;gap:11px;padding:12px 13px;}
+.mode-tab svg {width:37px;height:37px;min-width:37px;padding:8px;}
+.mode-label>span {font-size:16px;}
+.mode-label small {font-size:11px;}
+#panelDocument {min-width:0;}
+#panelDocument .doc-upload-step{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(215px,.78fr);gap:0 16px;}
+#panelDocument .doc-upload-step>.section-heading{grid-column:1/-1;}
+#panelDocument .doc-drop{grid-column:1;min-width:0;min-height:160px;}
+#panelDocument .supported-formats{grid-column:2;}
+#panelDocument .doc-chips{grid-template-columns:repeat(3,minmax(0,1fr));}
+#panelDocument .doc-empty{min-height:110px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;border:1px solid #304d4b;border-radius:13px;background:#0e1e2c;color:#bacbd6;}
+#panelDocument .doc-empty span{font-size:28px;color:#93d9b7;}
+#panelDocument .doc-empty strong{font-size:13px;}
+#panelDocument .doc-empty small{color:#92b1bb;font-size:11px;}
+#panelDocument .doc-selected{min-width:0;}
+#panelDocument .doc-file-row{display:flex;align-items:center;gap:12px;min-width:0;border:1px solid #304f4c;padding:12px;border-radius:12px;background:#132638;}
+#panelDocument .doc-file-row .text-action{font-size:12px;flex:none;}
+#panelDocument .doc-preview-frame{margin-top:12px;max-width:100%;min-height:160px;max-height:340px;overflow:auto;background:#122230;border:1px solid #36564f;border-radius:12px;padding:13px;display:grid;place-items:center;}
+#panelDocument #docPreviewImage{display:block;object-fit:contain;max-width:100%;height:auto;max-height:320px;box-shadow:0 5px 22px rgba(0,0,0,.3);}
+#panelDocument #docPreviewImage[hidden]{display:none;}
+#panelDocument #docPreviewText{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;color:#e6eff5;line-height:1.6;margin:0;max-width:100%;max-height:290px;overflow:auto;text-align:left;}
+#panelDocument .doc-warning{display:block;margin-top:12px;line-height:1.6;}
+#panelDocument .doc-settings-step .settings-panel{min-width:0;}
+#panelDocument .doc-settings-step .document-summary{margin-top:20px;}
+/* Render temporaneo Word: sempre nel browser, dietro la superficie dell'app e fuori dal layout. */
+#docRenderOff{position:fixed;top:0;left:0;z-index:-5;pointer-events:none;width:max-content;max-width:none;opacity:1;}
+#docRenderOff .docx-wrapper{background:transparent!important;padding:0!important;}
+#docRenderOff section.docx{box-shadow:none!important;margin:0!important;}
+@media(max-width:1100px){.mode-tab{gap:7px;padding:10px 9px}.mode-tab svg{width:32px;height:32px;min-width:32px}.mode-label>span{font-size:14px}.mode-label small{font-size:10px}}
+@media(max-width:760px){
+ .mode-switch{gap:5px;}
+ .mode-tab{min-height:66px;padding:7px 4px;gap:3px;justify-content:center;flex-direction:column;align-items:center;}
+ .mode-tab svg{width:25px;height:25px;min-width:25px;padding:4px;}
+ .mode-label{align-items:center;text-align:center;}
+ .mode-label>span{font-size:11px;white-space:normal;line-height:1.1;}
+ .mode-label small{font-size:8.5px;white-space:normal;line-height:1.1;}
+ #panelDocument .doc-upload-step{grid-template-columns:minmax(0,1fr);}
+ #panelDocument .doc-drop{grid-column:1;}
+ #panelDocument .supported-formats{grid-column:1;}
+}
+@media(max-width:360px){.mode-label>span{font-size:10px}.mode-label small{font-size:8px}}

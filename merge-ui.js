@@ -3,7 +3,7 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const el = {
-    createTab: $('tabCreate'), mergeTab: $('tabMerge'), ocrTab: $('tabOcr'), createPanel: $('panelCreate'), mergePanel: $('panelMerge'), ocrPanel: $('panelOcr'),
+    createTab: $('tabCreate'), mergeTab: $('tabMerge'), ocrTab: $('tabOcr'), docTab: $('tabDocument'), createPanel: $('panelCreate'), mergePanel: $('panelMerge'), ocrPanel: $('panelOcr'), docPanel: $('panelDocument'),
     advancedToggle: $('advancedToggle'), advancedContent: $('advancedContent'), advancedSummary: $('advancedSummary'),
     orientation: $('orientation'), quality: $('quality'),
     sizing: $('mergeSizing'), input: $('mergeInput'), add: $('mergeAddButton'), more: $('mergeAddMore'), drop: $('mergeDrop'),
@@ -29,7 +29,7 @@
   }
   function setMode(mode) {
     for (const [name,tab,panel] of [
-      ['create',el.createTab,el.createPanel],['merge',el.mergeTab,el.mergePanel],['ocr',el.ocrTab,el.ocrPanel]
+      ['create',el.createTab,el.createPanel],['merge',el.mergeTab,el.mergePanel],['ocr',el.ocrTab,el.ocrPanel],['doc',el.docTab,el.docPanel]
     ]) {
       const active = name === mode;
       panel.hidden = !active;
@@ -37,14 +37,14 @@
       tab.setAttribute('aria-selected',String(active));
     }
   }
-  for (const [name,tab] of [['create',el.createTab],['merge',el.mergeTab],['ocr',el.ocrTab]]) {
+  for (const [name,tab] of [['create',el.createTab],['merge',el.mergeTab],['ocr',el.ocrTab],['doc',el.docTab]]) {
     tab.addEventListener('click',()=>setMode(name));
     tab.addEventListener('keydown',evt=>{
       if (!['ArrowLeft','ArrowRight'].includes(evt.key)) return;
       evt.preventDefault();
-      const tabs=[el.createTab,el.mergeTab,el.ocrTab];
+      const tabs=[el.createTab,el.mergeTab,el.ocrTab,el.docTab];
       const index=tabs.indexOf(tab);
-      const next=tabs[(index + (evt.key==='ArrowRight'?1:2)) % tabs.length];
+      const next=tabs[(index + (evt.key==='ArrowRight'?1:tabs.length-1)) % tabs.length];
       next.click();next.focus();
     });
   }

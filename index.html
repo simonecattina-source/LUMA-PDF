@@ -6,7 +6,7 @@
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport"/>
 <meta content="#0a1120" name="theme-color"/>
 <meta content="dark" name="color-scheme"/>
-<meta content="LUMA PDF: crea PDF da immagini, unisci documenti e digitalizza foto o screenshot tramite OCR, direttamente sul tuo dispositivo." name="description"/>
+<meta content="LUMA PDF: crea PDF da foto, unisci PDF, digitalizza con OCR e converti documenti Word DOCX o di testo in PDF, in privato nel browser." name="description"/>
 <meta content="no-referrer" name="referrer"/>
 <title>LUMA PDF — Crea, unisci e digitalizza PDF in privato</title>
 <!-- Icona ufficiale LUMA PDF: documento con L spray e scritta PDF. -->
@@ -21,7 +21,7 @@
 <script defer="" src="./vendor/tesseract.min.js"></script>
 <script defer="" src="./a4-layout.js"></script>
 <script defer="" src="./ocr-ui.js"></script>
-<link href="./redesign.css" rel="stylesheet"/><script defer="" src="./redesign.js"></script></head>
+<link href="./redesign.css" rel="stylesheet"/><script defer="" src="./redesign.js"></script><link href="./document-convert.css" rel="stylesheet"/></head>
 <body>
 <div aria-hidden="true" class="ambient-glow"></div>
 <div class="app-shell">
@@ -49,11 +49,13 @@
 <button aria-controls="panelOcr" aria-selected="false" class="mode-tab" id="tabOcr" role="tab" type="button">
 <svg aria-hidden="true" viewbox="0 0 24 24"><path d="M4 8V4h4M16 4h4v4M4 16v4h4m8 0h4v-4M7 12h10M7 15h7M7 9h10"></path></svg><span class="mode-label"><span>PDF OCR</span><small>Testo da immagini</small></span>
 </button>
-</nav>
+<button aria-controls="panelDocument" aria-selected="false" class="mode-tab" id="tabDocument" role="tab" type="button">
+<svg aria-hidden="true" viewbox="0 0 24 24"><path d="M7 3h8l5 5v13H4V3h3Z"></path><path d="M14 3v6h6M8 13h8M8 17h8"></path></svg>
+<span class="mode-label"><span>Convertitore PDF</span><small>Word e testo</small></span>
+</button></nav>
 <section aria-labelledby="tabCreate" id="panelCreate" role="tabpanel">
 <section class="flow-step flow-upload"><div class="section-heading">
 <div><span class="step-number">01</span><span class="section-title step-strong">Aggiungi le fotografie</span><p class="step-description">Scatta foto o carica immagini dal tuo dispositivo.</p></div>
-
 </div><section aria-label="Seleziona o trascina le fotografie" class="upload-area" id="dropzone">
 <div aria-hidden="true" class="upload-icon"><svg viewbox="0 0 24 24"><rect height="18" rx="4" width="18" x="3" y="3"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="m4 17 5-5 3 3 3-4 5 6"></path></svg></div>
 <h2>Trascina qui le immagini</h2>
@@ -64,9 +66,6 @@
 </div>
 <span class="upload-hint">JPG · PNG · WebP · altri formati supportati dal browser</span>
 </section><input accept="image/*" aria-label="Fotocamera" capture="environment" class="visually-hidden" id="cameraInput" type="file"/><input accept="image/*,.heic,.heif" aria-label="Seleziona foto" class="visually-hidden" id="galleryInput" multiple="" type="file"/><div class="supported-formats"><strong>Formati supportati</strong><div class="format-chips"><span>JPG</span><span>PNG</span><span>HEIC</span><span>WEBP</span></div><small>Foto · Screenshot · Immagini multiple</small></div></section>
-
-
-
 <div class="workspace">
 <section aria-labelledby="pagesTitle" class="pages-section flow-step flow-pages">
 <div class="section-heading section-heading-workspace">
@@ -77,7 +76,6 @@
 <div class="empty-state" id="emptyState">
 <div aria-hidden="true" class="empty-icon"><svg viewbox="0 0 68 68"><rect height="43" rx="5" width="36" x="17" y="12"></rect><path d="M24 22h22M24 30h22M24 38h13"></path><path d="m13 19-3 3M53 51l5 5"></path></svg></div>
 <strong>Le immagini appariranno qui per riordinarle.</strong>
-
 </div>
 <ol aria-label="Fotografie nell'ordine del PDF" class="photo-list" id="photoList"></ol>
 <div class="pages-footer" hidden="" id="pagesFooter">
@@ -92,8 +90,6 @@
 </div>
 <div class="settings-panel">
 <div class="filename-group"><label class="field-label" for="filename">Nome del documento <span class="required-mark">Obbligatorio *</span></label><div class="input-wrap"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M7 3h8l5 5v13H4V3h3Z"></path><path d="M14 3v6h6M8 14h8M8 18h5"></path></svg><input aria-describedby="nameHint" autocomplete="off" id="filename" maxlength="80" placeholder="Inserisci il nome del documento" required="" spellcheck="false" type="text" value=""/><span class="file-ext">.pdf</span></div><span class="field-hint" id="nameHint">Inserisci un nome per abilitare la creazione del PDF.</span></div>
-
-
 <div class="advanced-panel" id="advancedPanel">
 <button aria-controls="advancedContent" aria-expanded="false" class="advanced-toggle" id="advancedToggle" type="button">
 <svg aria-hidden="true" viewbox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"></path></svg>
@@ -135,24 +131,16 @@
 <button class="btn btn-primary" id="mergeAddButton" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>Carica PDF</button>
 <span>Solo file .pdf · Nessun caricamento online</span>
 </section><input accept=".pdf,application/pdf" aria-label="Seleziona due o più PDF" class="visually-hidden" id="mergeInput" multiple="" type="file"/></section>
-
-
 <section class="flow-step flow-pages"><div class="section-heading merge-heading"><div><span class="step-number">02</span><span class="section-title step-strong">Scegli l'ordine</span><p class="step-description">Disponi i documenti nella sequenza desiderata.</p></div><span class="count-pill" id="mergeCount">0 PDF</span></div><div class="pages-panel merge-pages">
 <div class="merge-empty" id="mergeEmpty"><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="15" rx="2" width="11" x="4" y="5"></rect><path d="M9 2h10l3 3v16M8 11h5M8 15h4"></path></svg><strong>Nessun documento selezionato</strong><span>Qui potrai cambiare l'ordine dei PDF da unire.</span></div>
 <ol aria-label="Ordine dei documenti da unire" class="merge-list" id="mergeList"></ol>
 <div class="pages-footer" hidden="" id="mergeFooter"><button class="text-action" id="mergeAddMore" type="button">+ Aggiungi PDF</button><button class="text-action text-action-danger" id="mergeClear" type="button">Svuota tutto</button></div>
 </div></section>
-
 </div>
 <div class="merge-settings flow-step flow-settings">
 <div class="section-heading section-heading-workspace"><div><span class="step-number">03</span><span class="section-title step-strong">Unisci e scarica</span><p class="step-description">Assegna un nome e crea il PDF finale.</p></div></div>
 <div class="settings-panel">
 <div class="filename-group"><label class="field-label" for="mergeFilename">Nome del documento <span class="required-mark">Obbligatorio *</span></label><div class="input-wrap"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M7 3h8l5 5v13H4V3h3Z"></path><path d="M14 3v6h6M8 14h8"></path></svg><input autocomplete="off" id="mergeFilename" maxlength="80" placeholder="Inserisci il nome del PDF finale" required="" spellcheck="false" type="text" value=""/><span class="file-ext">.pdf</span></div><span class="field-hint">Inserisci un nome per abilitare l'unione.</span></div>
-
-
-
-
-
 <div class="advanced-panel"><button aria-expanded="false" aria-label="Apri impostazioni documento" class="advanced-toggle" type="button"><span aria-hidden="true" class="advanced-symbol">⚙</span><span class="advanced-toggle-copy"><strong>Impostazioni documento</strong><small>A4 · Pagina completa</small></span><span aria-hidden="true" class="advanced-down">⌄</span></button><div class="advanced-content" hidden=""><label class="field-label field-label-spaced" for="mergeSizing">Riempimento del foglio A4</label><div class="select-wrap"><select id="mergeSizing"><option value="contain">Pagina completa · senza tagli (consigliato)</option><option value="cover">A4 pieno · ritaglia i bordi</option></select><svg aria-hidden="true" viewbox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></svg></div><span class="field-hint">Tutti i fogli finali saranno A4. La modalità senza tagli conserva l'intero documento e può lasciare bande bianche.</span></div></div><div class="document-summary"><div><span>Documenti</span><strong id="mergeSummaryCount">0</strong></div><div><span>Totale pagine</span><strong id="mergePageCount">0</strong></div><div><span>Invio a server</span><strong class="success-label">Nessuno</strong></div></div>
 <button class="btn btn-generate" disabled="" id="mergeGenerate" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M7 3h8l5 5v13H4V3h3Z"></path><path d="M14 3v6h6M8 13h8M8 17h8"></path></svg><span id="mergeGenerateLabel">Unisci e scarica PDF</span></button>
 <div class="progress-area" hidden="" id="mergeProgress"><div class="progress-track"><div id="mergeProgressBar"></div></div><span aria-live="polite" id="mergeProgressText">Preparazione...</span></div>
@@ -177,25 +165,16 @@
 </div>
 <span>JPG, PNG, WebP e immagini supportate dal browser · Fino a 20 pagine</span>
 </section><input accept="image/*" aria-label="Scatta nuova fotografia per OCR" capture="environment" class="visually-hidden" id="ocrCameraInput" type="file"/><input accept="image/*,.heic,.heif" aria-label="Seleziona fotografie o screenshot per OCR" class="visually-hidden" id="ocrGalleryInput" multiple="" type="file"/></section>
-
-
-
 <section class="flow-step flow-pages"><div class="section-heading merge-heading"><div><span class="step-number">02</span><span class="section-title step-strong">Organizza le pagine</span><p class="step-description">Ordina, ruota o rimuovi le immagini.</p></div><span class="count-pill" id="ocrCount">0 pagine</span></div><div class="pages-panel merge-pages">
 <div class="merge-empty" id="ocrEmpty"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M7 3h7l5 5v13H5V3h2Z"></path><path d="M8 11h8M8 15h8"></path></svg><strong>Documento OCR ancora vuoto</strong><span>Qui compariranno le foto e gli screenshot nell'ordine del PDF.</span></div>
 <ol aria-label="Ordine delle immagini OCR" class="merge-list" id="ocrList"></ol>
 <div class="pages-footer" hidden="" id="ocrFooter"><button class="text-action" id="ocrAddMore" type="button">+ Aggiungi immagini</button><button class="text-action text-action-danger" id="ocrClear" type="button">Svuota tutto</button></div>
 </div></section>
-
 </div>
 <div class="merge-settings flow-step flow-settings">
 <div class="section-heading section-heading-workspace"><div><span class="step-number">03</span><span class="section-title step-strong">Digitalizza il documento</span><p class="step-description">Riconosci il testo conservando l’aspetto originale.</p></div></div>
 <div class="settings-panel">
 <div class="filename-group"><label class="field-label" for="ocrFilename">Nome del documento <span class="required-mark">Obbligatorio *</span></label><div class="input-wrap"><input autocomplete="off" id="ocrFilename" maxlength="80" placeholder="Inserisci il nome del documento" required="" spellcheck="false" type="text"/><span class="file-ext">.pdf</span></div><span class="field-hint">Testo italiano e inglese. Nessuna ricostruzione di tabelle o grafici.</span></div>
-
-
-
-
-
 <div class="advanced-panel"><button aria-expanded="false" aria-label="Apri impostazioni documento" class="advanced-toggle" type="button"><span aria-hidden="true" class="advanced-symbol">⚙</span><span class="advanced-toggle-copy"><strong>Impostazioni documento</strong><small>A4 · Pagina completa</small></span><span aria-hidden="true" class="advanced-down">⌄</span></button><div class="advanced-content" hidden=""><label class="field-label field-label-spaced" for="ocrSizing">Riempimento del foglio A4</label><div class="select-wrap"><select id="ocrSizing"><option value="contain">Pagina completa · senza tagli (consigliato)</option><option value="cover">A4 pieno · ritaglia i bordi</option></select><svg aria-hidden="true" viewbox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></svg></div><span class="field-hint">Per buste paga e tabelle mantieni «senza tagli». Riempire totalmente un A4 senza bande richiede ritagliare o deformare quando le proporzioni sono diverse.</span></div></div><div class="document-summary"><div><span>Immagini</span><strong id="ocrSummaryCount">0</strong></div><div><span>Formato finale</span><strong>A4</strong></div><div><span>Invio a server</span><strong class="success-label">Nessuno</strong></div></div>
 <button class="btn btn-generate" disabled="" id="ocrGenerate" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M7 3h8l5 5v13H4V3h3Z"></path><path d="M14 3v6h6M8 13h8M8 17h8"></path></svg><span id="ocrGenerateLabel">Digitalizza e scarica PDF</span></button>
 <div class="progress-area" hidden="" id="ocrProgress"><div class="progress-track"><div id="ocrProgressBar"></div></div><span aria-live="polite" id="ocrProgressText">Preparazione OCR...</span></div>
@@ -205,6 +184,41 @@
 </div>
 </div>
 </section>
+<section aria-labelledby="tabDocument" hidden="" id="panelDocument" role="tabpanel">
+<section class="flow-step flow-upload doc-upload-step">
+<div class="section-heading"><div><span class="step-number">01</span><span class="section-title step-strong">Carica un documento</span><p class="step-description">Converti un documento Word o di testo direttamente nel browser.</p></div></div>
+<div aria-label="Seleziona un documento da convertire" class="merge-drop doc-drop" id="docDrop">
+<span aria-hidden="true" class="merge-upload-icon"><svg viewbox="0 0 24 24"><path d="M8 3H5v18h14V7l-4-4H8Z"></path><path d="M14 3v5h5M8 12h8M8 16h8"></path></svg></span>
+<strong>Trascina qui il tuo documento</strong><p>Oppure scegli un file dal dispositivo.</p>
+<button class="btn btn-primary" id="docChoose" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M12 16V3M7 8l5-5 5 5M4 16v5h16v-5"></path></svg>Carica documento</button>
+<span>Word DOCX · Testo TXT · Markdown MD</span>
+</div>
+<input accept=".docx,.txt,.md,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown" aria-label="Documento Word o testo da convertire" class="visually-hidden" id="docInput" type="file"/>
+<div class="supported-formats"><strong>Formati supportati</strong><div class="format-chips doc-chips"><span>DOCX</span><span>TXT</span><span>MD</span></div><small>Il vecchio .doc, Excel e PowerPoint non sono supportati in questa versione.</small></div>
+</section>
+<section class="flow-step flow-pages doc-preview-step">
+<div class="section-heading"><div><span class="step-number">02</span><span class="section-title step-strong">Controlla il documento</span><p class="step-description">Verifica le pagine e soprattutto tabelle, caratteri e impaginazione.</p></div><span class="count-pill" id="docCount">Nessun file</span></div>
+<div class="doc-empty" id="docEmpty"><span aria-hidden="true">▤</span><strong>Il documento comparirà qui</strong><small>Anteprima della prima pagina prima di creare il PDF.</small></div>
+<div class="doc-selected" hidden="" id="docSelected">
+<div class="doc-file-row"><span aria-hidden="true" class="merge-file-icon">DOC</span><span class="merge-file-meta"><strong class="merge-file-name" id="docFileName"></strong><small id="docFileInfo"></small></span><button class="text-action text-action-danger" id="docRemove" type="button">Rimuovi</button></div>
+<div class="doc-preview-frame" id="docPreviewFrame"><img alt="Anteprima della prima pagina del documento" hidden="" id="docPreviewImage"/><p id="docPreviewText">Preparazione dell'anteprima...</p></div>
+<p class="field-hint doc-warning">I Word complessi possono variare rispetto a Microsoft Word. Il PDF DOCX mantiene l'aspetto della pagina renderizzata ma il testo potrebbe non essere selezionabile.</p>
+</div>
+</section>
+<section class="flow-step flow-settings doc-settings-step">
+<div class="section-heading section-heading-workspace"><div><span class="step-number">03</span><span class="section-title step-strong">Converti in PDF</span><p class="step-description">Scegli il nome e crea il documento in formato A4.</p></div></div>
+<div class="settings-panel">
+<div class="filename-group"><label class="field-label" for="docFilename">Nome del documento <span class="required-mark">Obbligatorio *</span></label><div class="input-wrap"><input autocomplete="off" id="docFilename" maxlength="80" placeholder="Inserisci il nome del PDF" required="" spellcheck="false" type="text"/><span class="file-ext">.pdf</span></div><span class="field-hint">Il nome non è preimpostato.</span></div>
+<div class="advanced-panel"><button aria-controls="docAdvancedContent" aria-expanded="false" class="advanced-toggle" id="docAdvancedToggle" type="button"><span aria-hidden="true" class="advanced-symbol">⚙</span><span class="advanced-toggle-copy"><strong>Impostazioni documento</strong><small id="docAdvancedSummary">A4 · Pagina completa</small></span><span aria-hidden="true" class="advanced-down">⌄</span></button><div class="advanced-content" hidden="" id="docAdvancedContent"><label class="field-label field-label-spaced" for="docSizing">Riempimento A4</label><div class="select-wrap"><select id="docSizing"><option value="contain">Pagina completa · senza tagli (consigliato)</option><option value="cover">A4 pieno · possibili tagli</option></select></div><span class="field-hint">Usa «senza tagli» per documenti con tabelle, firme e numeri importanti.</span></div></div>
+<div class="document-summary"><div><span>Documento</span><strong id="docSummary">Nessuno</strong></div><div><span>Formato</span><strong>A4</strong></div><div><span>Invio a server</span><strong class="success-label">Nessuno</strong></div></div>
+<button class="btn btn-generate" disabled="" id="docGenerate" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M7 3h8l5 5v13H4V3h3Z"></path><path d="M14 3v6h6M8 14h8M8 18h8"></path></svg><span id="docGenerateLabel">Converti e scarica PDF</span></button>
+<div class="progress-area" hidden="" id="docProgress"><div class="progress-track"><div id="docProgressBar"></div></div><span aria-live="polite" id="docProgressText">Conversione in corso...</span></div>
+<div aria-live="polite" class="result-message" hidden="" id="docResult" role="status"></div>
+<p class="download-note">Il documento viene letto e convertito nel browser. Controlla l'anteprima e il PDF, soprattutto con tabelle e grafici.</p>
+</div>
+</section>
+</section>
+<div aria-hidden="true" id="docRenderOff"></div>
 <section aria-label="Informazioni sulla privacy" class="privacy-strip">
 <div class="privacy-icon"><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="11" rx="2" width="14" x="5" y="10"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path><circle cx="12" cy="15.5" r="1"></circle></svg></div>
 <div><strong>I tuoi documenti restano tuoi.</strong><p>Nessun account, database o caricamento su server. Foto, screenshot e PDF vengono elaborati temporaneamente nella memoria del browser e non sono conservate dall'app. Ricaricando la pagina, il documento in lavorazione viene azzerato.</p></div>
@@ -228,5 +242,5 @@
 </div>
 </div>
 <div aria-live="polite" class="toast" hidden="" id="toast" role="status"></div>
-</body>
+<script defer="" src="./vendor/jszip.min.js"></script><script defer="" src="./vendor/docx-preview.min.js"></script><script defer="" src="./vendor/html2canvas.min.js"></script><script defer="" src="./document-convert-ui.js"></script></body>
 </html>
