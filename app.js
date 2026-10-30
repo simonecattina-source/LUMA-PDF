@@ -11,7 +11,7 @@
   const MAX_TOTAL_SIZE = 250 * 1024 * 1024;
   const A4_SHORT = 595.28;
   const A4_LONG = 841.89;
-  const MARGIN = 18;
+  const MARGIN = 0; // A4 senza margini aggiunti
 
   const elements = {
     cameraButton: document.getElementById('cameraButton'),
@@ -29,6 +29,7 @@
     filename: document.getElementById('filename'),
     orientation: document.getElementById('orientation'),
     quality: document.getElementById('quality'),
+    pageSizing: document.getElementById('pageSizing'),
     generateButton: document.getElementById('generateButton'),
     generateLabel: document.getElementById('generateLabel'),
     progressArea: document.getElementById('progressArea'),
@@ -410,15 +411,16 @@
     begin(id) { this.offsets[id] = this.size; this.add(`${id} 0 obj\n`); }
     end() { this.add('\nendobj\n'); }
     object(id, body) { this.begin(id); this.add(body); this.end(); }
-    appendPhoto(index, photo, orientation) {
+    appendPhoto(index, photo, orientation, sizing = 'contain') {
       const imageId = 4 + index * 3;
       const contentId = imageId + 1;
       const pageId = imageId + 2;
       const landscape = orientation === 'landscape' || (orientation === 'auto' && photo.width > photo.height);
       const pageWidth = landscape ? A4_LONG : A4_SHORT;
       const pageHeight = landscape ? A4_SHORT : A4_LONG;
-      const factor = Math.min((pageWidth - 2 * MARGIN) / photo.width,
-                              (pageHeight - 2 * MARGIN) / photo.height);
+      const factor = (sizing === 'cover' ? Math.max : Math.min)(
+        (pageWidth - 2 * MARGIN) / photo.width,
+        (pageHeight - 2 * MARGIN) / photo.height);
       const drawWidth = photo.width * factor;
       const drawHeight = photo.height * factor;
       const x = (pageWidth - drawWidth) / 2;
@@ -475,7 +477,7 @@
         // Permette di aggiornare la schermata prima del lavoro sulla foto.
         await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
         const jpeg = await preparePhoto(photos[i], elements.quality.value === 'high');
-        writer.appendPhoto(i, jpeg, elements.orientation.value);
+        writer.appendPhoto(i, jpeg, elements.orientation.value, elements.pageSizing.value);
       }
       elements.progressLabel.textContent = 'Finalizzazione PDF...';
       elements.progressBar.style.width = '100%';

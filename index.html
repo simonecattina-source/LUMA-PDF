@@ -16,6 +16,10 @@
   <script src="./app.js" defer></script>
   <script src="./pdf-merge-engine.js" defer></script>
   <script src="./merge-ui.js" defer></script>
+  <script src="./vendor/pdf-lib.min.js" defer></script>
+  <script src="./vendor/tesseract.min.js" defer></script>
+  <script src="./a4-layout.js" defer></script>
+  <script src="./ocr-ui.js" defer></script>
 </head>
 <body>
   <div class="ambient-glow" aria-hidden="true"></div>
@@ -60,6 +64,9 @@
         </button>
         <button class="mode-tab" type="button" id="tabMerge" role="tab" aria-controls="panelMerge" aria-selected="false">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H4v15h12v-4M12 3h4l4 4v14H8V7a4 4 0 0 1 4-4Z"/><path d="M14 3v5h6M11 14h6M11 17h5"/></svg><span>Unisci PDF</span>
+        </button>
+        <button class="mode-tab" type="button" id="tabOcr" role="tab" aria-controls="panelOcr" aria-selected="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V4h4M16 4h4v4M4 16v4h4m8 0h4v-4M7 12h10M7 15h7M7 9h10"/></svg><span>PDF OCR</span>
         </button>
       </nav>
       <section id="panelCreate" role="tabpanel" aria-labelledby="tabCreate">
@@ -122,6 +129,9 @@
 
             <label for="quality" class="field-label ">Qualità delle immagini</label>
             <div class="select-wrap"><select id="quality"><option value="balanced">Bilanciata · PDF più leggero</option><option value="high">Alta · Più dettagli</option></select><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+            <label for="pageSizing" class="field-label field-label-spaced">Riempimento del foglio A4</label>
+            <div class="select-wrap"><select id="pageSizing"><option value="contain">Pagina completa · senza tagli (consigliato)</option><option value="cover">A4 pieno · ritaglia i bordi</option></select><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+            <span class="field-hint">Se l'immagine non ha proporzioni A4, per evitare tagli possono restare sottili bande bianche.</span>
 
 
               </div>
@@ -168,6 +178,9 @@
               <label for="mergeFilename" class="field-label">Nome del documento <span class="required-mark">Obbligatorio *</span></label>
               <div class="input-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h8l5 5v13H4V3h3Z"/><path d="M14 3v6h6M8 14h8"/></svg><input id="mergeFilename" placeholder="Inserisci il nome del PDF finale" type="text" maxlength="80" value="" required autocomplete="off" spellcheck="false"><span class="file-ext">.pdf</span></div>
               <span class="field-hint">Inserisci un nome per abilitare l'unione.</span>
+              <label for="mergeSizing" class="field-label field-label-spaced">Riempimento del foglio A4</label>
+              <div class="select-wrap"><select id="mergeSizing"><option value="contain">Pagina completa · senza tagli (consigliato)</option><option value="cover">A4 pieno · ritaglia i bordi</option></select><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+              <span class="field-hint">Tutti i fogli finali saranno A4. La modalità senza tagli conserva l'intero documento e può lasciare bande bianche.</span>
               <div class="document-summary"><div><span>Documenti</span><strong id="mergeSummaryCount">0</strong></div><div><span>Totale pagine</span><strong id="mergePageCount">0</strong></div><div><span>Invio a server</span><strong class="success-label">Nessuno</strong></div></div>
               <button id="mergeGenerate" class="btn btn-generate" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h8l5 5v13H4V3h3Z"/><path d="M14 3v6h6M8 13h8M8 17h8"/></svg><span id="mergeGenerateLabel">Unisci e scarica PDF</span></button>
               <div class="progress-area" id="mergeProgress" hidden><div class="progress-track"><div id="mergeProgressBar"></div></div><span id="mergeProgressText" aria-live="polite">Preparazione...</span></div>
@@ -178,9 +191,51 @@
           </div>
         </div>
       </section>
+      <section id="panelOcr" role="tabpanel" aria-labelledby="tabOcr" hidden>
+        <div class="merge-intro"><h2>PDF digitalizzato · OCR</h2><p>Fotografa o carica anche screenshot e buste paga. La pagina resta visivamente fedele, con uno strato di testo ricercabile.</p></div>
+        <div class="merge-layout">
+          <div class="merge-main">
+            <div class="section-heading"><div><span class="step-number">01</span><span class="section-title step-strong">SCATTA O CARICA LE FOTO</span></div></div>
+            <section id="ocrDrop" class="merge-drop" aria-label="Foto e screenshot per OCR">
+              <span class="merge-upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8V4h4M16 4h4v4M4 16v4h4m8 0h4v-4M7 12h10M7 16h7M7 8h10"/></svg></span>
+              <strong>Digitalizza una fotografia o uno screenshot</strong>
+              <p>Testi ricercabili, tabelle e grafici conservati visivamente.</p>
+              <div class="upload-actions">
+                <button id="ocrCameraButton" class="btn btn-primary" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3l2-3h6l2 3h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"/><circle cx="12" cy="13" r="4"/></svg>Scatta foto</button>
+                <button id="ocrGalleryButton" class="btn btn-outline" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="m3 17 5-5 4 4 3-3 6 5"/></svg>Carica immagini</button>
+              </div>
+              <span>JPG, PNG, WebP e immagini supportate dal browser · Fino a 20 pagine</span>
+            </section>
+            <input class="visually-hidden" id="ocrCameraInput" type="file" accept="image/*" capture="environment" aria-label="Scatta nuova fotografia per OCR">
+            <input class="visually-hidden" id="ocrGalleryInput" type="file" accept="image/*,.heic,.heif" multiple aria-label="Seleziona fotografie o screenshot per OCR">
+            <div class="section-heading merge-heading"><div><span class="step-number">02</span><span class="section-title step-strong">ORGANIZZA LE PAGINE</span></div><span class="count-pill" id="ocrCount">0 pagine</span></div>
+            <div class="pages-panel merge-pages">
+              <div class="merge-empty" id="ocrEmpty"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H5V3h2Z"/><path d="M8 11h8M8 15h8"/></svg><strong>Documento OCR ancora vuoto</strong><span>Qui compariranno le foto e gli screenshot nell'ordine del PDF.</span></div>
+              <ol class="merge-list" id="ocrList" aria-label="Ordine delle immagini OCR"></ol>
+              <div class="pages-footer" id="ocrFooter" hidden><button id="ocrAddMore" class="text-action" type="button">+ Aggiungi immagini</button><button id="ocrClear" class="text-action text-action-danger" type="button">Svuota tutto</button></div>
+            </div>
+          </div>
+          <div class="merge-settings">
+            <div class="section-heading section-heading-workspace"><div><span class="step-number">03</span><span class="section-title step-strong">DIGITALIZZA IL DOCUMENTO</span></div></div>
+            <div class="settings-panel">
+              <label for="ocrFilename" class="field-label">Nome del documento <span class="required-mark">Obbligatorio *</span></label>
+              <div class="input-wrap"><input id="ocrFilename" type="text" maxlength="80" placeholder="Inserisci il nome del documento" autocomplete="off" spellcheck="false" required><span class="file-ext">.pdf</span></div>
+              <span class="field-hint">Testo italiano e inglese. Nessuna ricostruzione di tabelle o grafici.</span>
+              <label for="ocrSizing" class="field-label field-label-spaced">Riempimento del foglio A4</label>
+              <div class="select-wrap"><select id="ocrSizing"><option value="contain">Pagina completa · senza tagli (consigliato)</option><option value="cover">A4 pieno · ritaglia i bordi</option></select><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+              <span class="field-hint">Per buste paga e tabelle mantieni «senza tagli». Riempire totalmente un A4 senza bande richiede ritagliare o deformare quando le proporzioni sono diverse.</span>
+              <div class="document-summary"><div><span>Immagini</span><strong id="ocrSummaryCount">0</strong></div><div><span>Formato finale</span><strong>A4</strong></div><div><span>Invio a server</span><strong class="success-label">Nessuno</strong></div></div>
+              <button class="btn btn-generate" id="ocrGenerate" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h8l5 5v13H4V3h3Z"/><path d="M14 3v6h6M8 13h8M8 17h8"/></svg><span id="ocrGenerateLabel">Digitalizza e crea PDF</span></button>
+              <div id="ocrProgress" class="progress-area" hidden><div class="progress-track"><div id="ocrProgressBar"></div></div><span id="ocrProgressText" aria-live="polite">Preparazione OCR...</span></div>
+              <div id="ocrResult" class="result-message" role="status" aria-live="polite" hidden></div>
+              <p class="download-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v4h16v-4"/></svg> Documento visivamente fedele alla foto, con testo ricercabile. Controlla sempre gli importi riconosciuti: l'OCR può commettere errori.</p>
+            </div>
+          </div>
+        </div>
+      </section>
       <section class="privacy-strip" aria-label="Informazioni sulla privacy">
         <div class="privacy-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1"/></svg></div>
-        <div><strong>Le tue foto restano tue.</strong><p>Nessun account, database o caricamento su server. Le foto vengono elaborate temporaneamente nella memoria del browser e non sono conservate dall'app. Ricaricando la pagina, il documento in lavorazione viene azzerato.</p></div>
+        <div><strong>I tuoi documenti restano tuoi.</strong><p>Nessun account, database o caricamento su server. Foto, screenshot e PDF vengono elaborati temporaneamente nella memoria del browser e non sono conservate dall'app. Ricaricando la pagina, il documento in lavorazione viene azzerato.</p></div>
       </section>
     </main>
     <footer class="site-footer"><span>LUMA <span class="brand-sub">PDF</span></span><span>Creato per funzionare senza servizi esterni.</span></footer>

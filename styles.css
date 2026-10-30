@@ -141,3 +141,14 @@ html,body{touch-action:pan-x pan-y}
 @media(max-width:1000px){.merge-layout{grid-template-columns:minmax(0,1fr) minmax(290px,.87fr);gap:17px}.merge-item{flex-wrap:wrap}.merge-tools{justify-content:flex-end;width:100%}}
 @media(max-width:760px){.mode-switch{gap:10px;margin-bottom:23px}.mode-tab{min-height:68px;font-size:16px}.mode-tab svg{width:23px;height:23px}.merge-layout{grid-template-columns:minmax(0,1fr);gap:21px}.merge-item{flex-wrap:nowrap}.merge-tools{width:auto}.merge-settings{order:1}}
 @media(max-width:480px){.mode-switch{gap:8px;margin-bottom:20px}.mode-tab{min-height:64px;padding:11px 6px;gap:7px;font-size:14px;border-radius:12px}.mode-tab svg{height:20px;width:20px}.step-strong{font-size:13px!important;letter-spacing:0}.merge-intro h2{font-size:20px}.merge-intro p{font-size:12px}.merge-drop{padding:23px 12px}.merge-drop strong{font-size:15px}.merge-item{gap:7px;padding:9px 7px}.merge-item .page-index{min-width:23px;width:23px}.merge-file-icon{width:33px;height:42px;font-size:10px}.merge-file-name{font-size:11px}.merge-tools{display:grid;grid-template-columns:repeat(2,27px);gap:1px}.merge-tools .tool-button{width:27px;height:28px;padding:4px}.required-mark{font-size:9px}}
+
+/* Terza finestra PDF OCR e layout A4: stesso tema LUMA. */
+.mode-switch{grid-template-columns:repeat(3,minmax(0,1fr))}
+#panelOcr{min-width:0}
+#panelOcr .merge-drop .upload-actions{display:flex;flex-wrap:wrap;justify-content:center;width:100%;gap:10px}
+#panelOcr .merge-drop .upload-actions .btn{min-width:155px}
+#panelOcr .merge-list{max-width:100%}
+.ocr-thumb{display:block;flex:none;width:42px;height:50px;object-fit:cover;border:1px solid #435b68;border-radius:8px}
+.ocr-file-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:700}
+.ocr-file-meta{min-width:0;flex:1}
+@media(max-width:480px){.mode-switch{gap:6px}.mode-tab{gap:5px;padding:10px 3px;font-size:12px;min-height:62px}.mode-tab svg{width:18px;height:18px}#panelOcr .merge-drop .upload-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}#panelOcr .merge-drop .upload-actions .btn{min-width:0;padding:9px 5px;white-space:nowrap;font-size:11px}}

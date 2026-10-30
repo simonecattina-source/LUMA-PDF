@@ -3,10 +3,10 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const el = {
-    createTab: $('tabCreate'), mergeTab: $('tabMerge'), createPanel: $('panelCreate'), mergePanel: $('panelMerge'),
+    createTab: $('tabCreate'), mergeTab: $('tabMerge'), ocrTab: $('tabOcr'), createPanel: $('panelCreate'), mergePanel: $('panelMerge'), ocrPanel: $('panelOcr'),
     advancedToggle: $('advancedToggle'), advancedContent: $('advancedContent'), advancedSummary: $('advancedSummary'),
     orientation: $('orientation'), quality: $('quality'),
-    input: $('mergeInput'), add: $('mergeAddButton'), more: $('mergeAddMore'), drop: $('mergeDrop'),
+    sizing: $('mergeSizing'), input: $('mergeInput'), add: $('mergeAddButton'), more: $('mergeAddMore'), drop: $('mergeDrop'),
     list: $('mergeList'), empty: $('mergeEmpty'), footer: $('mergeFooter'), count: $('mergeCount'),
     countSummary: $('mergeSummaryCount'), pageSummary: $('mergePageCount'), name: $('mergeFilename'),
     clear: $('mergeClear'), generate: $('mergeGenerate'), generateLabel: $('mergeGenerateLabel'),
@@ -28,23 +28,26 @@
     return (s || '').replace(/\.pdf$/i,'').replace(/[\\/:*?"<>|\x00-\x1f]/g,'-').trim().replace(/[. ]+$/g,'').slice(0,80);
   }
   function setMode(mode) {
-    const create = mode === 'create';
-    el.createPanel.hidden = !create;
-    el.mergePanel.hidden = create;
-    el.createTab.classList.toggle('is-active', create);
-    el.mergeTab.classList.toggle('is-active', !create);
-    el.createTab.setAttribute('aria-selected', String(create));
-    el.mergeTab.setAttribute('aria-selected', String(!create));
+    for (const [name,tab,panel] of [
+      ['create',el.createTab,el.createPanel],['merge',el.mergeTab,el.mergePanel],['ocr',el.ocrTab,el.ocrPanel]
+    ]) {
+      const active = name === mode;
+      panel.hidden = !active;
+      tab.classList.toggle('is-active',active);
+      tab.setAttribute('aria-selected',String(active));
+    }
   }
-  el.createTab.addEventListener('click', () => setMode('create'));
-  el.mergeTab.addEventListener('click', () => setMode('merge'));
-  // Arrow keys navigate between the mode tabs with accessible focus.
-  for (const button of [el.createTab, el.mergeTab]) button.addEventListener('keydown', evt => {
-    if (!['ArrowLeft','ArrowRight'].includes(evt.key)) return;
-    evt.preventDefault();
-    const target = button === el.createTab ? el.mergeTab : el.createTab;
-    target.click(); target.focus();
-  });
+  for (const [name,tab] of [['create',el.createTab],['merge',el.mergeTab],['ocr',el.ocrTab]]) {
+    tab.addEventListener('click',()=>setMode(name));
+    tab.addEventListener('keydown',evt=>{
+      if (!['ArrowLeft','ArrowRight'].includes(evt.key)) return;
+      evt.preventDefault();
+      const tabs=[el.createTab,el.mergeTab,el.ocrTab];
+      const index=tabs.indexOf(tab);
+      const next=tabs[(index + (evt.key==='ArrowRight'?1:2)) % tabs.length];
+      next.click();next.focus();
+    });
+  }
   function updateAdvanced() {
     const o = el.orientation.value === 'auto' ? 'Automatico' : el.orientation.value === 'portrait' ? 'Verticale' : 'Orizzontale';
     const q = el.quality.value === 'high' ? 'Qualità alta' : 'Qualità bilanciata';
@@ -152,7 +155,9 @@
     busy=true;setResult('');el.progress.hidden=false;el.progressBar.style.width='20%';el.progressText.textContent='Unione dei documenti in corso...';el.generateLabel.textContent='Unione in corso...';updateBusy();
     try {
       await new Promise(resolve => requestAnimationFrame(()=>setTimeout(resolve,0)));
-      const pdf=window.LumaPdfMerge.buildMerged(docs.map(d=>d.parsed));
+      const combined=window.LumaPdfMerge.buildMerged(docs.map(d=>d.parsed));
+      el.progressText.textContent='Adattamento di tutte le pagine al formato A4...';
+      const pdf=await window.LumaA4.convertPdf(combined, el.sizing.value);
       el.progressBar.style.width='100%';
       const url=URL.createObjectURL(pdf);
       const anchor=document.createElement('a');anchor.download=validName(el.name.value)+'.pdf';anchor.href=url;

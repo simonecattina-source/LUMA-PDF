@@ -1,76 +1,45 @@
-# LUMA PDF — app Web privata
+# LUMA PDF — Crea PDF, Unisci PDF, PDF OCR
 
-LUMA PDF è un’app Web **100% statica** per convertire fotografie in PDF A4 oppure unire due o più PDF in un unico documento. Funziona nei browser di iPhone, iPad, Android e PC.
+Applicazione Web **senza server di elaborazione e senza upload dei documenti**. Tutto il lavoro avviene nel browser del dispositivo.
 
-## Due finestre selezionabili
-- **Crea PDF** (aperta all'avvio): scatta o carica fotografie, riordinale e genera il documento.
-- **Unisci PDF**: carica due o più PDF, decidi l'ordine, imposta un nome e scarica il file unico.
-- In entrambe le modalità il **nome del documento è obbligatorio e parte vuoto**.
-- In Crea PDF la sezione **CREA IL DOCUMENTO** comprende le Impostazioni documento richiudibili: orientamento automatico e qualità bilanciata come valori iniziali.
-- I titoli dei passaggi sono evidenziati in verde menta con numerazione 01, 02 e 03.
+## Modalità
 
-## Funzioni
-- Scatto da fotocamera (quando il browser/dispositivo lo consente).
-- Caricamento di una o più immagini dalla galleria o dal PC.
-- Anteprime, riordino delle pagine, rotazione di 90° ed eliminazione.
-- Formato A4 con orientamento automatico, verticale oppure orizzontale.
-- Qualità bilanciata o alta; creazione e download del PDF direttamente nel browser.
-- Popup di conferma, errore ed esito con grafica LUMA PDF, senza dialoghi standard del browser.
-- Zoom gestuale disabilitato dove supportato (pinch e doppio tocco); lo scorrimento resta normale.
-- Unione PDF locale senza conversione delle pagine in immagini: per i PDF compatibili preserva testo, vettori e dimensioni delle pagine.
-- **Niente account, database, cloud per file, pubblicità, tracciamento, cookie, API esterne o dipendenze da CDN.**
+- **Crea PDF:** scatta o carica fotografie e screenshot, modifica l'ordine, ruota, scegli orientamento A4 e qualità. Nome file obbligatorio e inizialmente vuoto.
+- **Unisci PDF:** seleziona due o più documenti e uniscili in un PDF. I PDF protetti da password o con strutture particolari possono non essere supportati.
+- **PDF OCR:** scatta una nuova foto o carica immagini e screenshot, riordina le pagine e genera un PDF con il livello OCR ricercabile (italiano e inglese). Grafiche, tabelle e impaginazione restano visivamente quelle dell'immagine fotografata, **non ricostruite da OCR**. L'OCR può sbagliare cifre, ordine di lettura e caratteri: verificare sempre gli importi delle buste paga.
 
-## Dimensioni della pagina e zoom
-La pagina si adatta alla larghezza del dispositivo e mantiene la scala iniziale. Su touchscreen viene impedito lo zoom con due dita e quello da doppio tocco, nei limiti consentiti dal browser; iOS/Safari e funzioni di accessibilità possono comunque imporre comportamenti propri. Il font dei campi è almeno 16 px sui dispositivi touch per evitare lo zoom automatico di Safari durante la digitazione. Disattivare lo zoom riduce l’accessibilità per chi ha necessità di ingrandire i contenuti. Lo scorrimento verticale resta attivo.
+### Formato A4 in tutte le modalità
 
-## Privacy e limiti
-- Immagini e PDF sono trattati nella memoria temporanea del browser e **non vengono inviati a server**.
-- Non utilizza `localStorage`, `IndexedDB`, cookie, `fetch`, service worker o backend.
-- Il PDF salvato dall'utente rimane nella cartella download del suo dispositivo. Le foto originali restano dove si trovavano.
-- Browser e sistema operativo possono usare cache o file temporanei fuori dal controllo dell'app. Vercel, essendo l'hosting Web, serve i file della pagina e può conservare log tecnici di accesso al sito, **non le fotografie**.
-- Chiudendo/ricaricando la pagina si perde il lavoro in corso: è voluto, per evitare archiviazioni.
-- Alcuni formati come HEIC/HEIF dipendono dal supporto del browser. Se non vengono aperti, convertirli in JPG o usare le immagini già convertite dal sistema.
-- Limiti di protezione della memoria: 60 immagini (30 MB ciascuna, 250 MB originali complessivi); unione fino a 20 PDF, 100 MB complessivi.
-- L’unione supporta PDF standard e PDF con oggetti compressi FlateDecode. I PDF con password, malformati, con filtri non gestiti o costruzioni PDF specialistiche potrebbero non essere unibili; l’app visualizza un popup di errore senza toccare gli originali.
-- I file del codice possono essere pubblici su GitHub e la pagina Web pubblica su Vercel. Per accessi privati servirebbe un sistema aggiuntivo, non incluso.
+L'output è A4. Due opzioni per la proporzione:
 
-## Struttura
-```
-index.html
-styles.css
-app.js
-merge-ui.js                 # le due finestre e il caricamento/unione
-pdf-merge-engine.js        # motore PDF locale senza servizi esterni
-assets/luma-pdf-header-l.png     # sola L, senza scritta PDF: icona intestazione
-assets/icon.svg                  # versione precedente, non utilizzata
-assets/luma-pdf-apple-180.png     # icona Home iPhone/iPad
-assets/luma-pdf-icon-192.png      # icona browser
-assets/luma-pdf-icon-512.png      # immagine alta risoluzione
-assets/luma-pdf-favicon-32.png    # icona scheda Web
-vercel.json
-README.md
-```
-### Icona ufficiale
-La nuova icona **LUMA PDF** raffigura un documento luminoso verde menta con una grande L a effetto spray e la scritta PDF. `index.html` usa le immagini locali per la scheda del browser e per la schermata Home di iPhone/iPad. Non sono stati aggiunti manifest, service worker o servizi esterni. La piccola icona accanto al titolo usa invece `assets/luma-pdf-header-l.png` con la sola L spray, come richiesto. `assets/icon.svg` resta solo come vecchia risorsa di backup, ma non è più collegata alla pagina.
+- **Pagina completa senza tagli (predefinito):** massima dimensione all'interno del foglio A4, senza margini aggiunti. Se la proporzione originale non coincide con A4, rimangono inevitabilmente bande bianche.
+- **A4 pieno con ritaglio:** riempie completamente la superficie del foglio. Ritaglia le zone esterne quando le proporzioni non coincidono: **non usare per tabelle, buste paga o documenti in cui tutte le cifre devono rimanere visibili**.
 
-Se l'iPhone continua a mostrare la vecchia icona sulla schermata Home, il collegamento precedente potrebbe essere memorizzato da iOS: dopo il deploy, apri l'URL in Safari e aggiungi nuovamente alla schermata Home. LUMA PDF non conserva documenti tra sessioni; assicurati comunque di aver scaricato gli eventuali PDF ancora in lavorazione prima di rimuovere l'icona precedente.
+Allargare e schiacciare per riempire l'A4 deformerebbe celle e grafici, per questo non viene fatto.
 
-L'app genera il PDF con uno scrittore PDF 1.4 incluso in `app.js`, senza librerie esterne. Supporta JPG, PNG, WebP, GIF e gli altri raster **se il browser riesce a decodificarli**. SVG esclusi per sicurezza.
+## GitHub + Vercel — IMPORTANTISSIMO
 
-## Pubblicazione su GitHub e Vercel (senza terminale)
-1. Crea su GitHub un **nuovo repository**, distinto dagli altri progetti.
-2. **Estrai lo ZIP** fornito: non caricare lo ZIP così com'è.
-3. Nel repository scegli **Add file → Upload files**, carica `index.html`, `styles.css`, `app.js`, `merge-ui.js`, `pdf-merge-engine.js`, `vercel.json`, `README.md` e la cartella `assets`, poi fai commit. Se GitHub non permette l'intera cartella, crea prima `assets` o carica il file tramite il percorso `assets/icon.svg`.
-4. In Vercel: **Add New → Project → Import Git Repository** e seleziona questo nuovo repo.
-5. Se richiesto, imposta **Framework Preset: Other**. Non servono né install command né build command; il sito è statico. Root Directory: `./`. Non impostare una output directory come `dist`: `index.html` è nella root.
-6. Fai deploy. Apri l'URL HTTPS di Vercel da iPhone, iPad o PC.
+Dalla versione OCR serve una **compilazione automatica in fase di deploy**, perché il motore OCR WebAssembly, i dati linguistici italiani/inglesi e la libreria PDF vengono copiati nel sito. Il browser NON scarica nulla da siti di terze parti: file OCR e PDF sono serviti dal dominio di LUMA PDF.
 
-Non ci sono chiavi API, servizi da collegare, variabili d'ambiente o pacchetti da installare. Vercel pubblica automaticamente le modifiche caricate sul branch collegato.
+1. Carica il contenuto della cartella `LUMA_PDF_Web` nella radice del repository, insieme alla cartella `scripts` e a `package.json`.
+2. Su Vercel apri il progetto → **Settings → Build and Deployment**.
+3. `Framework Preset`: **Other**. `Root Directory`: `./`.
+4. `Build Command`: **`npm run build`** (rimuovi eventuale precedente Override vuoto che impedisce la build).
+5. `Output Directory`: **`dist`**.
+6. `Install Command`: predefinito (**npm install**); non lasciare un override vuoto che impedisca di installare le dipendenze.
+7. Esegui **Redeploy** o un nuovo commit su GitHub. Nella build Vercel installerà le librerie npm sul suo server di compilazione e copierà nel sito i modelli OCR.
 
-## Test locale
-Aprire semplicemente `index.html` può funzionare per alcuni browser, ma è preferibile provare direttamente dal sito HTTPS Vercel per testare fotocamera e download nella modalità reale.
+**Non è più il vecchio sito statico senza build.** Non caricare direttamente questa versione senza aggiornare le impostazioni Vercel, altrimenti non funzionerà.
 
-## Nota sui PDF
-I PDF uniti restano in memoria temporanea fino al download. Non vengono salvati in una cronologia. I PDF protetti o in formati non supportati vengono segnalati con un popup a tema.
+## Privacy
 
-Ogni immagine è adattata alla pagina A4 **senza tagliarne i bordi**, mantenendo le proporzioni. Il PDF risultante contiene immagini JPEG convertite localmente; non viene memorizzato nell'app dopo la chiusura della sessione.
+- Non vengono richiesti account e i documenti non sono inviati a server per essere elaborati.
+- Niente database, telemetria, cookie, localStorage, IndexedDB applicativo o service worker.
+- `Tesseract.js` è configurato con `cacheMethod: 'none'` per non conservare il modello linguistico nell'IndexedDB.
+- I modelli OCR e le librerie sono scaricati dallo **stesso sito Vercel**, non da CDN esterni. L'accesso al sito è soggetto agli usuali log tecnici di hosting.
+- I dati temporanei rimangono in RAM/browser e vengono rilasciati alla chiusura/rimozione dalla pagina per quanto tecnicamente possibile.
+- La funzione OCR usa la libreria open-source `tesseract.js@5.1.1` (licenza Apache-2.0), `tesseract.js-core@5.1.1`, dataset linguistici `@tesseract.js-data/{ita,eng}` e `pdf-lib@1.17.1` (licenza MIT).
+
+## Stato del collaudo
+
+L'interfaccia HTML/JS e il controllo statico possono essere verificati localmente. L'OCR completo richiede una build `npm install && npm run build` con accesso ai pacchetti npm durante il deployment; testare lo scatto e la creazione OCR sull'iPhone reale dopo il primo deploy. Non è garantita la corrispondenza esatta del testo estratto e nessun OCR è infallibile.
