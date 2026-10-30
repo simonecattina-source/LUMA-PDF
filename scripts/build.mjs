@@ -18,7 +18,7 @@ async function tree(folder) {
 }
 async function copy(src,dest) {await mkdir(dirname(dest),{recursive:true});await copyFile(src,dest);}
 await rm(dist,{recursive:true,force:true});await mkdir(dist,{recursive:true});
-for(const file of ['index.html','styles.css','redesign.css','redesign.js','app.js','merge-ui.js','pdf-merge-engine.js','a4-layout.js','ocr-ui.js','vercel.json']) await copy(join(root,file),join(dist,file));
+for(const file of ['index.html','styles.css','redesign.css','redesign.js','app.js','merge-ui.js','pdf-merge-engine.js','a4-layout.js','ocr-ui.js','document-convert-ui.js','document-convert.css','vercel.json']) await copy(join(root,file),join(dist,file));
 for(const file of await tree(join(root,'assets'))) await copy(file,join(dist,'assets',file.slice(join(root,'assets').length+1)));
 await copy(join(modules,'tesseract.js','dist','tesseract.min.js'),join(dist,'vendor','tesseract.min.js'));
 await copy(join(modules,'tesseract.js','dist','worker.min.js'),join(dist,'vendor','worker.min.js'));
@@ -39,3 +39,8 @@ for(const language of ['ita','eng']) {
   await mkdir(dirname(dest),{recursive:true});await writeFile(dest,compressed);
 }
 console.log('LUMA PDF: output dist/ pronto; OCR e PDF disponibili dal SOLO dominio del sito.');
+
+// Dipendenze conversione documenti: incluse nel sito (mai da CDN nel browser).
+await copy(join(modules,'jszip','dist','jszip.min.js'),join(dist,'vendor','jszip.min.js'));
+await copy(join(modules,'docx-preview','dist','docx-preview.min.js'),join(dist,'vendor','docx-preview.min.js'));
+await copy(join(modules,'html2canvas','dist','html2canvas.min.js'),join(dist,'vendor','html2canvas.min.js'));
