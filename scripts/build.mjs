@@ -18,7 +18,7 @@ async function tree(folder) {
 }
 async function copy(src,dest) {await mkdir(dirname(dest),{recursive:true});await copyFile(src,dest);}
 await rm(dist,{recursive:true,force:true});await mkdir(dist,{recursive:true});
-for(const file of ['index.html','styles.css','app.js','merge-ui.js','pdf-merge-engine.js','a4-layout.js','ocr-ui.js','vercel.json']) await copy(join(root,file),join(dist,file));
+for(const file of ['index.html','styles.css','redesign.css','redesign.js','app.js','merge-ui.js','pdf-merge-engine.js','a4-layout.js','ocr-ui.js','vercel.json']) await copy(join(root,file),join(dist,file));
 for(const file of await tree(join(root,'assets'))) await copy(file,join(dist,'assets',file.slice(join(root,'assets').length+1)));
 await copy(join(modules,'tesseract.js','dist','tesseract.min.js'),join(dist,'vendor','tesseract.min.js'));
 await copy(join(modules,'tesseract.js','dist','worker.min.js'),join(dist,'vendor','worker.min.js'));
