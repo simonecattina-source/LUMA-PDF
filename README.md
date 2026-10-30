@@ -43,3 +43,19 @@ Dalla versione OCR serve una **compilazione automatica in fase di deploy**, perc
 ## Stato del collaudo
 
 L'interfaccia HTML/JS e il controllo statico possono essere verificati localmente. L'OCR completo richiede una build `npm install && npm run build` con accesso ai pacchetti npm durante il deployment; testare lo scatto e la creazione OCR sull'iPhone reale dopo il primo deploy. Non è garantita la corrispondenza esatta del testo estratto e nessun OCR è infallibile.
+
+## Nuova interfaccia LUMA — grafica approvata (30 ottobre 2026)
+
+- Identità visiva originale conservata: blu notte `#0A1120`, pannelli `#101B2C`, verde menta `#A8F0BE` e salvia `#93D9B7`.
+- Intestazione con l'icona **L + foglio** senza il riquadro scuro. L'icona di installazione sulla Home iPhone resta quella precedente (con scritta PDF).
+- Illustrazione dei documenti molto più compatta, **a sinistra del titolo** «Tutto in un solo PDF» anche su smartphone.
+- Tre schede sempre visibili: Crea PDF / Unisci PDF / PDF OCR; un solo flusso alla volta.
+- Passaggi guidati numerati e compatti. Nome documento sempre richiesto, mai precompilato.
+- Orientamento, qualità e gestione A4 mantengono le impostazioni e le avvertenze sui ritagli. Le impostazioni sono chiuse inizialmente, incluse quelle nelle schede Unisci PDF e PDF OCR.
+- Finestre popup originali (informazione, conferma, successo, errore e svuotamento) ridisegnate con bordi salvia, sfondo blu notte, icone chiare e pulsanti verde menta.
+
+### File aggiunti e modificati
+
+`redesign.css`, `redesign.js`, `assets/luma-floating-pages.png` e `assets/luma-header-document-l.png` sono nuovi. `index.html` dispone la nuova struttura e mantiene i selettori ID per la compatibilità con i motori JavaScript; `scripts/build.mjs` copia i due nuovi file UI nella cartella `dist`. `README.md` aggiornato. I motori `app.js`, `merge-ui.js`, `ocr-ui.js`, `a4-layout.js` e `pdf-merge-engine.js` non sono stati modificati per il restyling.
+
+**Verifiche:** sintassi JS e integrità strutturale HTML esaminate; la build npm completa e i test funzionali iPhone/Vercel devono essere eseguiti dopo la pubblicazione. Il file standalone di anteprima HTML incluso separatamente è solo una demo grafica, non elabora documenti.
