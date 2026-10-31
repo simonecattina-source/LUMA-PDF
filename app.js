@@ -460,6 +460,41 @@
       .slice(0, 80);
   }
 
+  // High quality PNG screenshots are embedded losslessly (when dimensions allow).
+  // The existing compact JPEG writer remains the default for photos and normal mode.
+  async function createHighQualityPdf() {
+    if(!window.PDFLib?.PDFDocument) throw new Error('Motore PDF HD locale non presente nella build Vercel.');
+    const pdf=await window.PDFLib.PDFDocument.create();
+    let rawPngBytes=0;
+    for(let i=0;i<photos.length;i++){
+      const item=photos[i];
+      elements.progressLabel.textContent=`Elaborazione immagine HD ${i+1} di ${photos.length}...`;
+      elements.progressBar.style.width=`${Math.round(i/photos.length*100)}%`;
+      await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
+      const canKeepPng=(item.file.type==='image/png'||/\.png$/i.test(item.file.name)) && item.rotation===0 &&
+        Math.max(item.width,item.height)<=3400;
+      let img,width,height;
+      if(canKeepPng){
+        rawPngBytes+=item.file.size;
+        if(rawPngBytes>90*1048576)throw new Error('Le immagini PNG HD superano 90 MB. Suddividi il documento o scegli la qualità bilanciata.');
+        img=await pdf.embedPng(await item.file.arrayBuffer());
+        width=item.width;height=item.height;
+      }else{
+        const photo=await preparePhoto(item,true);
+        img=await pdf.embedJpg(photo.bytes);
+        width=photo.width;height=photo.height;
+      }
+      const landscape=elements.orientation.value==='landscape'||
+        (elements.orientation.value==='auto'&&width>height);
+      const pageWidth=landscape?A4_LONG:A4_SHORT,pageHeight=landscape?A4_SHORT:A4_LONG;
+      const factor=(elements.pageSizing.value==='cover'?Math.max:Math.min)(pageWidth/width,pageHeight/height);
+      const dw=width*factor,dh=height*factor;
+      const page=pdf.addPage([pageWidth,pageHeight]);
+      page.drawImage(img,{x:(pageWidth-dw)/2,y:(pageHeight-dh)/2,width:dw,height:dh});
+    }
+    return new Blob([await pdf.save({useObjectStreams:true})],{type:'application/pdf'});
+  }
+
   async function createPdf() {
     if (generating || adding || !photos.length || !normalizedName(elements.filename.value)) return;
     generating = true;
@@ -470,18 +505,22 @@
     updateBusyState();
     revokePreviousDownload();
     try {
-      const writer = new PdfWriter(photos.length);
-      for (let i = 0; i < photos.length; i++) {
-        elements.progressLabel.textContent = `Elaborazione fotografia ${i + 1} di ${photos.length}...`;
-        elements.progressBar.style.width = `${Math.round(i / photos.length * 100)}%`;
-        // Permette di aggiornare la schermata prima del lavoro sulla foto.
-        await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
-        const jpeg = await preparePhoto(photos[i], elements.quality.value === 'high');
-        writer.appendPhoto(i, jpeg, elements.orientation.value, elements.pageSizing.value);
+      let pdf;
+      if(elements.quality.value==='high') {
+        pdf=await createHighQualityPdf();
+      } else {
+        const writer=new PdfWriter(photos.length);
+        for(let i=0;i<photos.length;i++){
+          elements.progressLabel.textContent=`Elaborazione fotografia ${i+1} di ${photos.length}...`;
+          elements.progressBar.style.width=`${Math.round(i/photos.length*100)}%`;
+          await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
+          const jpeg=await preparePhoto(photos[i],false);
+          writer.appendPhoto(i,jpeg,elements.orientation.value,elements.pageSizing.value);
+        }
+        pdf=writer.finish();
       }
-      elements.progressLabel.textContent = 'Finalizzazione PDF...';
-      elements.progressBar.style.width = '100%';
-      const pdf = writer.finish();
+      elements.progressLabel.textContent='Finalizzazione PDF...';
+      elements.progressBar.style.width='100%';
       const name = `${normalizedName(elements.filename.value)}.pdf`;
       downloadUrl = URL.createObjectURL(pdf);
       const a = document.createElement('a');

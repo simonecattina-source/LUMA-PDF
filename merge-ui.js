@@ -77,7 +77,7 @@
     el.footer.hidden = docs.length === 0;
     el.count.textContent = `${docs.length} PDF`;
     el.countSummary.textContent = String(docs.length);
-    el.pageSummary.textContent = String(docs.reduce((n, d) => n + d.parsed.pageCount, 0));
+    el.pageSummary.textContent = String(docs.reduce((n, d) => n + d.pageCount, 0));
     docs.forEach((doc,i) => {
       const li=document.createElement('li');
       li.className='merge-item';
@@ -85,7 +85,7 @@
       const symbol=document.createElement('span');symbol.className='merge-file-icon';symbol.textContent='PDF';
       const meta=document.createElement('span');meta.className='merge-file-meta';
       const fileName=document.createElement('strong');fileName.className='merge-file-name';fileName.textContent=doc.file.name;fileName.title=doc.file.name;
-      const details=document.createElement('small');details.textContent=`${doc.parsed.pageCount} ${doc.parsed.pageCount===1?'pagina':'pagine'} · ${formatBytes(doc.file.size)}`;
+      const details=document.createElement('small');details.textContent=`${doc.pageCount} ${doc.pageCount===1?'pagina':'pagine'} · ${formatBytes(doc.file.size)}`;
       meta.append(fileName,details);
       const tools=document.createElement('span');tools.className='photo-tools merge-tools';
       [{key:'up',boundary:i===0,label:'Sposta su'},{key:'down',boundary:i===docs.length-1,label:'Sposta giù'},{key:'delete',boundary:false,label:'Rimuovi PDF'}].forEach(cfg => {
@@ -117,8 +117,15 @@
         if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {error='Seleziona soltanto documenti PDF.';continue;}
         if (totalBytes + file.size > maxTotalBytes) {error='Hai raggiunto il limite complessivo di 100 MB.';break;}
         try {
-          const parsed=await window.LumaPdfMerge.parsePdf(new Uint8Array(await file.arrayBuffer()));
-          docs.push({id:nextId++,file,parsed}); totalBytes+=file.size; added++;
+          if(!window.PDFLib?.PDFDocument)throw new Error('Motore PDF non caricato: controlla il deploy.');
+          const parsed=await window.PDFLib.PDFDocument.load(await file.arrayBuffer(),{updateMetadata:false});
+          const pageCount=parsed.getPageCount();
+          if(!pageCount || pageCount>500)throw new Error('Numero di pagine non supportato (massimo 500).');
+          const key=window.PDFLib.PDFName;
+          // Some interactive elements are not reliably preservable when fitting to A4.
+          const interactive=Boolean(parsed.catalog.get(key.of('AcroForm'))) ||
+            parsed.getPages().some(page=>Boolean(page.node.get(key.of('Annots'))));
+          docs.push({id:nextId++,file,pageCount,interactive}); totalBytes+=file.size; added++;
         } catch(e) { error=`${file.name}: ${e?.message||'PDF non supportato.'}`; }
       }
     } finally {busy=false;render();}
@@ -152,18 +159,21 @@
   el.drop.addEventListener('drop',e => {e.preventDefault();dragging=0;el.drop.classList.remove('is-dragging');void addFiles(e.dataTransfer?.files);});
   el.generate.addEventListener('click',async () => {
     if (busy || docs.length<2 || !validName(el.name.value)) return;
+    if(docs.some(doc=>doc.interactive)){
+      const confirmed=await window.LumaDialog.confirm('Elementi interattivi nei PDF','Alcuni PDF contengono moduli, link o annotazioni. Adattando le pagine al formato A4 tali elementi potrebbero non essere mantenuti. Vuoi proseguire?','Continua','Annulla');
+      if(!confirmed)return;
+    }
     busy=true;setResult('');el.progress.hidden=false;el.progressBar.style.width='20%';el.progressText.textContent='Unione dei documenti in corso...';el.generateLabel.textContent='Unione in corso...';updateBusy();
     try {
       await new Promise(resolve => requestAnimationFrame(()=>setTimeout(resolve,0)));
-      const combined=window.LumaPdfMerge.buildMerged(docs.map(d=>d.parsed));
-      el.progressText.textContent='Adattamento di tutte le pagine al formato A4...';
-      const pdf=await window.LumaA4.convertPdf(combined, el.sizing.value);
+      el.progressText.textContent='Unione e adattamento dei documenti al formato A4...';
+      const pdf=await window.LumaA4.combinePdfBytes(docs.map(d=>d.file),el.sizing.value);
       el.progressBar.style.width='100%';
       const url=URL.createObjectURL(pdf);
       const anchor=document.createElement('a');anchor.download=validName(el.name.value)+'.pdf';anchor.href=url;
       document.body.append(anchor);anchor.click();anchor.remove();
       setTimeout(()=>URL.revokeObjectURL(url),60000);
-      const pages=docs.reduce((n,d)=>n+d.parsed.pageCount,0);
+      const pages=docs.reduce((n,d)=>n+d.pageCount,0);
       const message=`PDF unito: ${pages} ${pages===1?'pagina':'pagine'} · ${formatBytes(pdf.size)}. Download richiesto al browser.`;
       setResult(message);
       await window.LumaDialog.success('PDF unito!',message,'Perfetto');

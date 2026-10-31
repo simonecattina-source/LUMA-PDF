@@ -16,40 +16,63 @@
     if(!/^[\da-f]{6}$/i.test(hex))return fallback;
     return [0,2,4].map(i=>parseInt(hex.slice(i,i+2),16)/255);
   }
+  // The PDF standard font uses Windows-1252; never silently alter monetary text.
+  const winAnsi = /^[\x20-\x7e\u00a0-\u00ff\u20ac\u201a\u0192\u201e\u2026\u2020\u2021\u02c6\u2030\u0160\u2039\u0152\u017d\u2018\u2019\u201c\u201d\u2022\u2013\u2014\u02dc\u2122\u0161\u203a\u0153\u017e\u0178\n\r\t]*$/;
   function textSafe(v) {
-    return String(v ?? '').replace(/[\u2018\u2019]/g,"'").replace(/[\u201c\u201d]/g,'"')
-      .replace(/[\u2013\u2014]/g,'-').replace(/\u00a0/g,' ')
-      .replace(/[\x00-\x08\x0B\x0E-\x1F\u0100-\u2021\u2023-\uFFFF]/g,c => ({'\u2022':'*'})[c]||'?');
+    const value=String(v??'').replace(/\t/g,'    ').replace(/\r/g,'');
+    if(!winAnsi.test(value)) throw err('Caratteri non rappresentabili nel font PDF standard. Conversione interrotta per non modificare silenziosamente i dati.');
+    return value;
   }
   function excelValue(cell) {
-    if(cell.type===0) return '';
-    if(typeof cell.text==='string' && cell.text) return cell.text;
-    const value=cell.value;
+    if(cell.type===0)return '';
+    let value=cell.value;
     if(value==null)return '';
-    if(value instanceof Date)return value.toLocaleDateString('it-IT');
-    if(typeof value==='object') {
+    if(typeof value==='object' && !(value instanceof Date)) {
       if(Array.isArray(value.richText))return value.richText.map(x=>x.text||'').join('');
-      if('result' in value)return String(value.result??'#FORMULA SENZA RISULTATO');
-      if('text' in value)return String(value.text);
-      return '[valore Office non supportato]';
+      if('result' in value)value=value.result;
+      else if('text' in value)return String(value.text);
+      else throw err(`Cella ${cell.address}: tipo di valore Excel non convertibile senza alterazioni.`);
     }
-    return String(value);
+    if(value==null)throw err(`Cella ${cell.address}: formula senza valore calcolato salvato.`);
+    if(value instanceof Date)return value.toLocaleDateString('it-IT');
+    if(typeof value!=='number')return String(value);
+    if(!Number.isFinite(value))throw err(`Cella ${cell.address}: valore numerico non valido.`);
+    const fmt=(cell.numFmt||'General').trim();
+    if(!fmt || fmt.toLowerCase()==='general')return String(value);
+    // Respect standard numeric, percent and currency Excel displays; reject complex
+    // formatting instead of returning an incorrectly represented financial value.
+    const quoted=[...fmt.matchAll(/"([^"]*)"/g)].map(m=>m[1].trim());
+    if(quoted.some(fragment=>fragment && !['€','$','£','%'].includes(fragment)))
+      throw err(`Cella ${cell.address}: un suffisso/unità numerica personalizzata non può essere riprodotta fedelmente.`);
+    const normalized=fmt.replace(/\\./g,'').replace(/"[^"]*"/g,'').split(';')[0];
+    if(/\[|\]|\*|_|\?|[ymdhs]/i.test(normalized))throw err(`Cella ${cell.address}: formato numerico Excel complesso, non riproducibile con sicurezza.`);
+    const decimalMatch=normalized.match(/\.([0#]+)/);
+    const decimals=decimalMatch?Math.min(8,decimalMatch[1].length):0;
+    if(/[^0#.,% €$£+\-]/.test(normalized))throw err(`Cella ${cell.address}: formato numerico non supportato: ${fmt.slice(0,25)}.`);
+    if(normalized.includes('%'))return new Intl.NumberFormat('it-IT',{minimumFractionDigits:decimals,maximumFractionDigits:decimals}).format(value*100)+'%';
+    const currency=normalized.includes('€')?'EUR':normalized.includes('$')?'USD':normalized.includes('£')?'GBP':null;
+    if(currency)return new Intl.NumberFormat('it-IT',{style:'currency',currency,minimumFractionDigits:decimals,maximumFractionDigits:decimals}).format(value);
+    if(/^0+$/.test(normalized))return String(Math.round(value)).padStart(normalized.length,'0');
+    return new Intl.NumberFormat('it-IT',{useGrouping:normalized.includes(','),minimumFractionDigits:decimals,maximumFractionDigits:decimals}).format(value);
   }
-  function splitText(value,font,size,maxWidth,maxLines) {
+  function splitText(value,font,size,maxWidth,maxLines,address) {
+    const content=textSafe(value);
+    if(content.length>12000) throw err(`Cella ${address}: testo eccessivamente lungo.`);
     const lines=[];
-    for (const paragraph of textSafe(value).replace(/\r/g,'').split('\n')){
-      if(!paragraph){lines.push('');continue;}
+    for(const paragraph of content.split('\n')){
       let line='';
-      for(const ch of paragraph) {
-        if(font.widthOfTextAtSize(line+ch,size)<=maxWidth){line+=ch;continue;}
-        if(line)lines.push(line);
-        line=ch;
-        if(lines.length>=maxLines)break;
+      for(const ch of paragraph){
+        if(line && font.widthOfTextAtSize(line+ch,size)>maxWidth){
+          lines.push(line);line='';
+          if(lines.length>=maxLines)throw err(`Cella ${address}: testo troppo lungo per la riga. Allarga la riga o la colonna in Excel.`);
+        }
+        if(font.widthOfTextAtSize(ch,size)>maxWidth)throw err(`Cella ${address}: colonna troppo stretta.`);
+        line+=ch;
       }
-      if(line && lines.length<maxLines)lines.push(line);
-      if(lines.length>=maxLines)break;
+      lines.push(line);
+      if(lines.length>maxLines)throw err(`Cella ${address}: il testo verrebbe tagliato. Conversione interrotta per evitare perdita dei dati.`);
     }
-    return lines.slice(0,maxLines);
+    return lines;
   }
   const hexType = x => (x?.rgb && /^[0-9a-f]{8}$/i.test(x.rgb)) ? x.rgb : (x?.argb||'');
   function vectorColor(pdf,color, fallback){const x=colorRgb(hexType(color),fallback);return pdf.rgb(...x);}
@@ -57,6 +80,9 @@
     if(!window.JSZip) throw err('Lettore Office non disponibile nel sito. Controlla la build Vercel.');
     const zip=await window.JSZip.loadAsync(file);
     const names=Object.keys(zip.files);
+    if(names.length>6000)throw err('Archivio Office con troppi elementi (massimo 6000).');
+    const expanded=Object.values(zip.files).reduce((sum,entry)=>sum+(entry._data?.uncompressedSize||0),0);
+    if(expanded>180*1048576)throw err('Archivio Office eccessivamente compresso o troppo grande (limite 180 MB decompressione).');
     const off = kind==='xlsx' ? ['xl/charts/','xl/drawings/','xl/embeddings/','xl/media/'] : [];
     const found=off.filter(folder=>names.some(n=>n.startsWith(folder) && !n.endsWith('/')));
     return {found, encrypted:names.some(n=>/EncryptedPackage|EncryptionInfo/.test(n))};
@@ -94,13 +120,17 @@
   function colWidths(sh,last) {
     return Array.from({length:last},(_,i)=>{
       const col=sh.getColumn(i+1);
-      return col.hidden?0:Math.max(28,Math.min(260,(col.width||13)*7.0+8));
+      const w=(col.width||13)*7.0+8;
+      if(!col.hidden && w>260)throw err(`Colonna ${i+1} del foglio ${sh.name} troppo larga per A4: riducila in Excel.`);
+      return col.hidden?0:Math.max(28,w);
     });
   }
   function rowHeights(sh,last) {
     return Array.from({length:last},(_,i)=>{
       const row=sh.getRow(i+1);
-      return row.hidden?0:Math.max(20,Math.min(170,(row.height||18)*1.333));
+      const h=(row.height||18)*1.333;
+      if(!row.hidden && h>170)throw err(`Riga ${i+1} del foglio ${sh.name} troppo alta per la conversione.`);
+      return row.hidden?0:Math.max(20,h);
     });
   }
   // Suddivide in fasce di colonne/righe per preservare la leggibilità del testo.
@@ -136,9 +166,13 @@
     const txt=excelValue(cell);
     if(!txt)return;
     const font=cell.font?.bold?fonts.bold:fonts.normal;
-    const pointSize=Math.max(5.5,Math.min(15,Number(cell.font?.size)||10))*Math.min(1.3,scale*1.23);
+    const sourcePointSize=Number(cell.font?.size)||10;
+    if(sourcePointSize>15 || sourcePointSize<5.5)throw err(`Cella ${cell.address}: dimensione del carattere non riproducibile fedelmente (5,5–15 pt).`);
+    const pointSize=sourcePointSize*Math.min(1.3,scale*1.23);
     const pad=2.5*scale;
-    const lines=splitText(txt,font,pointSize,Math.max(8,w-pad*2),Math.max(1,Math.floor((h-pad*2)/(pointSize*1.13))));
+    const lines=splitText(txt,font,pointSize,Math.max(8,w-pad*2),Math.max(1,Math.floor((h-pad*2)/(pointSize*1.13))),cell.address);
+    if(lines.length>1 && !cell.alignment?.wrapText && !String(txt).includes('\n'))
+      throw err(`Cella ${cell.address}: Excel non prevede testo a capo ma la conversione lo richiederebbe. Allarga la colonna.`);
     const lineH=pointSize*1.13;
     const totalH=lines.length*lineH;
     const vert=cell.alignment?.vertical||'middle';
@@ -148,7 +182,7 @@
       const align=cell.alignment?.horizontal||'left';
       const tx=align==='right'?Math.max(x+pad,x+w-pad-textW):align==='center'?Math.max(x+pad,x+(w-textW)/2):x+pad;
       const ty=A4.h-top-offY-(i+1)*lineH+pointSize*.22;
-      if(ty<A4.h-top-h)break;
+      if(ty<A4.h-top-h)throw err(`Cella ${cell.address}: testo oltre il margine inferiore; conversione interrotta.`);
       page.drawText(line,{x:tx,y:ty,font,size:pointSize,color:vectorColor(pdf,cell.font?.color,[.09,.14,.19])});
     }
   }
@@ -210,11 +244,16 @@
   }
   async function captureSlide(mod,presentation,index,off,scale=2.2){
     if(typeof window.html2canvas!=='function')throw err('Motore immagini HD non disponibile.');
-    const handle=mod.renderSlide(presentation,presentation.slides[index],{externalMedia:'block',pdfjs:false,mediaUrlCache:new Map()});
+    const nodeErrors=[];
+    const handle=mod.renderSlide(presentation,presentation.slides[index],{
+      externalMedia:'block',pdfjs:false,mediaUrlCache:new Map(),
+      onNodeError:(nodeId,error)=>nodeErrors.push(String(nodeId||'elemento')+': '+String(error?.message||'errore'))
+    });
     try{
       off.replaceChildren();
       off.append(handle.element);
       await handle.ready;
+      if(nodeErrors.length)throw err('La diapositiva contiene elementi grafici che non possono essere resi correttamente: '+nodeErrors.slice(0,2).join('; '));
       if(document.fonts?.ready)await document.fonts.ready;
       const el=handle.element;
       const width=el.scrollWidth||el.offsetWidth;
@@ -271,5 +310,5 @@
     const {mod,presentation}=await loadPowerPoint(file);
     return {type:'slides',description:`PowerPoint PPTX · ${presentation.slides.length} diapositive · HD PNG senza perdita`,mod,presentation};
   }
-  window.LumaOffice=Object.freeze({inspect,makeExcelPdf,makePptxPdf,captureSlide});
+  window.LumaOffice=Object.freeze({inspect,inspectZip,makeExcelPdf,makePptxPdf,captureSlide});
 })();

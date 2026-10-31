@@ -34,7 +34,12 @@
   function showResult(message,error=false) {ui.result.hidden=!message;ui.result.textContent=message;ui.result.classList.toggle('error',error);}
   function update() {
     ui.generate.disabled=busy||!file||!renderReady||!validName(ui.name.value);
-    for (const item of [ui.choose,ui.input,ui.name,ui.remove,ui.sizing]) item.disabled=busy;
+    for (const item of [ui.choose,ui.input,ui.name,ui.remove]) item.disabled=busy;
+    // Excel, TXT and MD use their own fixed A4 pagination, not image crop/contain.
+    const fixedLayout=['xlsx','txt','md'].includes(fileType);
+    ui.sizing.disabled=busy||fixedLayout;
+    ui.settingSummary.textContent=fixedLayout?'A4 · Impaginazione testuale (senza ritaglio)':
+      (ui.sizing.value==='cover'?'A4 · Pieno con ritaglio':'A4 · Pagina completa');
     ui.empty.hidden=!!file;ui.selected.hidden=!file;
     ui.count.textContent=file?'1 documento':'Nessun file';ui.summary.textContent=file?fileType.toUpperCase():'Nessuno';
   }
@@ -132,7 +137,12 @@
     ui.previewText.hidden=false;ui.preview.hidden=true;
     ui.name.value='';setBusy(true,'Lettura del documento...');
     try {
-      if(kind==='docx')await previewDocx();
+      if(kind==='docx') {
+        if(!window.LumaOffice?.inspectZip)throw new Error('Controllo sicurezza Office non disponibile.');
+        const zip=await window.LumaOffice.inspectZip(f,'docx');
+        if(zip.encrypted)throw new Error('I file Office cifrati non sono supportati.');
+        await previewDocx();
+      }
       else if(kind==='xlsx'||kind==='pptx')await previewOffice(kind);
       else await previewPlain();
       if(id!==currentId)return;
@@ -154,10 +164,10 @@
   ui.drop.addEventListener('dragleave',()=>{dragDepth=Math.max(0,dragDepth-1);if(!dragDepth)ui.drop.classList.remove('is-dragging');});
   ui.drop.addEventListener('drop',e=>{e.preventDefault();dragDepth=0;ui.drop.classList.remove('is-dragging');void chooseFile(e.dataTransfer?.files?.[0]);});
   function normalizeText(s) {
-    // PDF StandardFonts: font base compatibili WinAnsi; sostituisci simboli non rappresentabili.
-    return s.replace(/\t/g,'    ').replace(/[\u2018\u2019]/g,"'").replace(/[\u201c\u201d]/g,'"')
-      .replace(/[\u2013\u2014]/g,'-').replace(/\u2022/g,'*').replace(/\u00a0/g,' ')
-      .replace(/[^\x20-\x7e\u00a1-\u00ff\u20ac\n\r]/g,'?');
+    const content=s.replace(/\t/g,'    ').replace(/\r/g,'');
+    if(!/^[\x20-\x7e\u00a0-\u00ff\u20ac\u201a\u0192\u201e\u2026\u2020\u2021\u02c6\u2030\u0160\u2039\u0152\u017d\u2018\u2019\u201c\u201d\u2022\u2013\u2014\u02dc\u2122\u0161\u203a\u0153\u017e\u0178\n]*$/.test(content))
+      throw new Error('Alcuni caratteri non sono supportati dal font PDF standard. Conversione interrotta per evitare dati alterati.');
+    return content;
   }
   function download(pdf,name) {
     const url=URL.createObjectURL(new Blob([pdf],{type:'application/pdf'}));
@@ -222,6 +232,7 @@
       const targetH=Math.max(1,Math.round(canvas.width*a4.height/a4.width));
       // Evita che una sezione DOCX insolitamente lunga venga rimpicciolita illeggibilmente.
       const split=canvas.height>targetH*1.18;
+      if(split && sections[i].querySelector('table'))throw new Error('Una tabella Word attraversa il punto di divisione pagina. Correggi i salti pagina in Word per evitare celle tagliate.');
       const step=split?targetH:canvas.height;
       for(let top=0;top<canvas.height;top+=step){
         if(++total>70)throw new Error('Troppe pagine per questa conversione (limite 70).');
