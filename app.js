@@ -362,7 +362,7 @@
 
   async function preparePhoto(item, highQuality) {
     const image = await loadImage(item.url);
-    const maxSide = highQuality ? 3000 : 2000;
+    const maxSide = highQuality ? 3400 : 2600; // A4 HD, con limiti di memoria per iPhone
     const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
     const w = Math.max(1, Math.round(image.naturalWidth * scale));
     const h = Math.max(1, Math.round(image.naturalHeight * scale));
@@ -379,7 +379,7 @@
     context.translate(canvas.width / 2, canvas.height / 2);
     context.rotate(item.rotation * Math.PI / 180);
     context.drawImage(image, -w / 2, -h / 2, w, h);
-    const blob = await canvasToJpeg(canvas, highQuality ? 0.93 : 0.83);
+    const blob = await canvasToJpeg(canvas, highQuality ? 0.97 : 0.92);
     const width = canvas.width;
     const height = canvas.height;
     // Rilascia il buffer della canvas appena possibile.

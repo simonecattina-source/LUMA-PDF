@@ -79,3 +79,23 @@ L'interfaccia HTML/JS e il controllo statico possono essere verificati localment
 - Consentiti esclusivamente gli stili CSS dinamici richiesti da `docx-preview` (CSP `style-src`), lasciando invariati gli altri divieti di script e rete.
 - Verificati in browser (con motori PDF/DOCX simulati) selezione dei file, vincolo del nome, popup, download, formati rifiutati e layout responsive.
 - **Da verificare dopo la compilazione Vercel:** reale qualità dei PDF DOCX e TXT, tabelle, paginazione, font, immagini e Safari iPhone. I test simulati non provano la correttezza del PDF finale.
+
+
+## Excel e PowerPoint → PDF (alta qualità)
+
+Nella scheda **Convertitore PDF**, puoi caricare **`.xlsx` e `.pptx`** oltre a `.docx`, `.txt` e `.md`.
+L'elaborazione rimane nel browser, senza servizi di conversione o caricamento di documenti su server.
+
+- **Excel XLSX:** ogni foglio visibile viene impaginato in A4, conservando i valori e molti elementi di formattazione (celle unite, colore, bordi, stili e allineamenti). Il testo viene scritto come **vettore nel PDF**, quindi resta nitido a ogni zoom. Non ricalcola formule: utilizza i valori salvati nel workbook. **Excel contenenti grafici, disegni, immagini o oggetti incorporati sono bloccati** perché non è possibile garantirne una ricostruzione fedele tramite il renderer locale. Esportali direttamente da Excel.
+- **PowerPoint PPTX:** ogni diapositiva viene renderizzata localmente in **PNG lossless HD** e posizionata su un foglio A4. Default: pagina completa, proporzioni preservate; opzionale A4 pieno con possibile ritaglio. Alcuni effetti, font, video, 3D o elementi complessi possono variare da PowerPoint.
+- **Word DOCX:** la conversione renderizza le pagine in PNG senza compressione con perdita (qualità aumentata, compatibilmente con la memoria del dispositivo). DOCX complessi possono comunque differire dall'originale.
+- **TXT e MD:** testo PDF vettoriale, `.md` trattato come testo semplice.
+- **Crea PDF, Unisci PDF e PDF OCR:** funzioni già presenti conservate, senza modifica alle icone installate.
+
+### Limiti e affidabilità
+
+La conversione di Microsoft Office eseguita **interamente nel browser** non è equivalente al motore ufficiale di Excel/PowerPoint. I renderer HTML possono gestire in modo diverso font, bordi, layout e contenuti complessi. I file importanti vanno verificati visivamente dopo la conversione. Per XLSX con grafici/disegni, il programma non genera un PDF incompleto: blocca la conversione con un messaggio chiaro.
+
+La build Vercel aggiunge `exceljs` e `@aiden0z/pptx-renderer` come dipendenze installate durante `npm install`; i file serviti dal browser provengono solo dal dominio dell'app.
+
+**Configurazione Vercel:** Framework Other, Build `npm run build`, Output `dist`. La conversione va verificata dopo il deploy con un file reale XLSX e PPTX, incluse anteprime e pagine PDF risultanti.

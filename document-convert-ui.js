@@ -24,6 +24,8 @@
   let busy = false;
   let renderReady = false;
   let currentId = 0;
+  let officePreview = null;
+  let pptxRenderBusy = false;
   const a4 = {width:595.28,height:841.89};
   function validName(value) {
     return String(value||'').replace(/\.pdf$/i,'').replace(/[\\/:*?"<>|\x00-\x1f]/g,'-').trim().replace(/[. ]+$/g,'').slice(0,80);
@@ -45,7 +47,7 @@
     update();
   }
   function clearFile() {
-    ++currentId;file=null;fileType=null;renderReady=false;
+    ++currentId;file=null;fileType=null;renderReady=false;officePreview=null;
     ui.off.replaceChildren();ui.preview.removeAttribute('src');ui.preview.hidden=true;
     ui.previewText.hidden=false;showResult('');update();
   }
@@ -53,6 +55,8 @@
   function getKind(f) {
     const lower=f.name.toLowerCase();
     if(lower.endsWith('.docx'))return 'docx';
+    if(lower.endsWith('.xlsx'))return 'xlsx';
+    if(lower.endsWith('.pptx'))return 'pptx';
     if(lower.endsWith('.txt'))return 'txt';
     if(lower.endsWith('.md'))return 'md';
     return null;
@@ -96,6 +100,20 @@
     ui.fileInfo.textContent=`${formattedSize(file.size)} · Word DOCX · ${pages.length} ${pages.length===1?'pagina/sezione':'pagine/sezioni'} rilevate`;
     mini.width=mini.height=1;
   }
+  async function previewOffice(kind) {
+    if(!window.LumaOffice)throw new Error('Motore Excel/PowerPoint non caricato. Verifica la build Vercel.');
+    const result=await window.LumaOffice.inspect(file,kind);
+    officePreview=result;
+    ui.fileInfo.textContent=`${formattedSize(file.size)} · ${result.description}`;
+    if(result.type==='text'){
+      ui.previewText.textContent=result.preview;
+      ui.previewText.hidden=false;ui.preview.hidden=true;
+    }else{
+      const canvas=await window.LumaOffice.captureSlide(result.mod,result.presentation,0,ui.off,0.75);
+      ui.preview.src=canvas.toDataURL('image/png');ui.preview.hidden=false;ui.previewText.hidden=true;
+      canvas.width=canvas.height=1;
+    }
+  }
   async function previewPlain() {
     const text=await file.text();
     if(text.length>300000)throw new Error('Documento di testo troppo lungo (limite 300.000 caratteri).');
@@ -106,7 +124,7 @@
   async function chooseFile(f) {
     if(busy||!f)return;
     const kind=getKind(f);
-    if(!kind) {await explainError('Questa versione supporta Word .docx e file .txt o .md. Il vecchio formato .doc, Excel e PowerPoint non sono ancora supportati.');return;}
+    if(!kind) {await explainError('Formati supportati: Word .docx, Excel .xlsx, PowerPoint .pptx, testo .txt e .md. I vecchi formati .doc, .xls e .ppt non sono supportati.');return;}
     if(f.size===0||f.size>15*1048576) {await explainError('Seleziona un documento non vuoto di massimo 15 MB.');return;}
     clearFile();const id=currentId;
     file=f;fileType=kind;renderReady=false;
@@ -114,7 +132,9 @@
     ui.previewText.hidden=false;ui.preview.hidden=true;
     ui.name.value='';setBusy(true,'Lettura del documento...');
     try {
-      if(kind==='docx')await previewDocx();else await previewPlain();
+      if(kind==='docx')await previewDocx();
+      else if(kind==='xlsx'||kind==='pptx')await previewOffice(kind);
+      else await previewPlain();
       if(id!==currentId)return;
       renderReady=true;showResult('Anteprima pronta. Verifica impaginazione e cifre prima di convertire.');
     } catch(e) {
@@ -183,6 +203,14 @@
     }
     return {bytes:await pdf.save(),pages:pageCount};
   }
+  async function buildOfficePdf(kind,source) {
+    const progress=(value,message)=>{
+      ui.progressText.textContent=message;
+      ui.bar.style.width=`${Math.max(12,Math.min(95,Math.round(value*100)))}%`;
+    };
+    if(kind==='xlsx')return window.LumaOffice.makeExcelPdf(source,{progress});
+    return window.LumaOffice.makePptxPdf(source,{off:ui.off,sizing:ui.sizing.value,progress});
+  }
   async function buildDocxPdf() {
     const pdf=await window.PDFLib.PDFDocument.create();
     const sections=getPages();let total=0;
@@ -190,7 +218,7 @@
       ui.progressText.textContent=`Conversione pagina Word ${i+1} di ${sections.length}...`;
       ui.bar.style.width=(12+76*i/sections.length)+'%';
       await new Promise(resolve=>setTimeout(resolve,10));
-      const canvas=await capture(sections[i],1.45);
+      const canvas=await capture(sections[i],Math.min(2.6,2300 / Math.max(sections[i].scrollWidth||800,sections[i].scrollHeight||1100)));
       const targetH=Math.max(1,Math.round(canvas.width*a4.height/a4.width));
       // Evita che una sezione DOCX insolitamente lunga venga rimpicciolita illeggibilmente.
       const split=canvas.height>targetH*1.18;
@@ -201,7 +229,7 @@
         const tile=document.createElement('canvas');tile.width=canvas.width;tile.height=height;
         const ctx=tile.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,tile.width,tile.height);
         ctx.drawImage(canvas,0,top,canvas.width,height,0,0,canvas.width,height);
-        const image=await pdf.embedJpg(tile.toDataURL('image/jpeg',0.94));
+        const image=await pdf.embedPng(tile.toDataURL('image/png'));
         const page=pdf.addPage([a4.width,a4.height]);
         const ratio=ui.sizing.value==='cover'?Math.max(a4.width/tile.width,a4.height/tile.height):Math.min(a4.width/tile.width,a4.height/tile.height);
         const w=tile.width*ratio,h=tile.height*ratio;
@@ -216,9 +244,10 @@
     if(busy||!renderReady||!file||!validName(ui.name.value))return;
     const current=file;
     if(!window.PDFLib?.PDFDocument){await explainError('Libreria PDF non caricata. Verifica il deploy Vercel.');return;}
-    setBusy(true,'Preparazione del PDF A4...');showResult('');
+    setBusy(true,'Preparazione del PDF A4 · Alta qualità...');showResult('');
     try {
-      const result=fileType==='docx'?await buildDocxPdf():await buildTxtPdf(current);
+      const result=fileType==='docx'?await buildDocxPdf():
+        (fileType==='xlsx'||fileType==='pptx')?await buildOfficePdf(fileType,current):await buildTxtPdf(current);
       ui.bar.style.width='100%';
       download(result.bytes,validName(ui.name.value));
       const message=`${result.pages} ${result.pages===1?'pagina A4':'pagine A4'} · Conversione eseguita nel browser. Verifica il PDF scaricato.`;

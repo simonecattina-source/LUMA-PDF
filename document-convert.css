@@ -9,7 +9,7 @@
 #panelDocument .doc-upload-step>.section-heading{grid-column:1/-1;}
 #panelDocument .doc-drop{grid-column:1;min-width:0;min-height:160px;}
 #panelDocument .supported-formats{grid-column:2;}
-#panelDocument .doc-chips{grid-template-columns:repeat(3,minmax(0,1fr));}
+#panelDocument .doc-chips{grid-template-columns:repeat(5,minmax(0,1fr));}
 #panelDocument .doc-empty{min-height:110px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;border:1px solid #304d4b;border-radius:13px;background:#0e1e2c;color:#bacbd6;}
 #panelDocument .doc-empty span{font-size:28px;color:#93d9b7;}
 #panelDocument .doc-empty strong{font-size:13px;}
@@ -41,3 +41,6 @@
  #panelDocument .supported-formats{grid-column:1;}
 }
 @media(max-width:360px){.mode-label>span{font-size:10px}.mode-label small{font-size:8px}}
+
+#panelDocument .doc-chips span{font-size:11px;padding-inline:6px;}
+@media(max-width:420px){#panelDocument .doc-chips{grid-template-columns:repeat(3,minmax(0,1fr));}}

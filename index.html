@@ -6,7 +6,7 @@
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport"/>
 <meta content="#0a1120" name="theme-color"/>
 <meta content="dark" name="color-scheme"/>
-<meta content="LUMA PDF: crea PDF da foto, unisci PDF, digitalizza con OCR e converti documenti Word DOCX o di testo in PDF, in privato nel browser." name="description"/>
+<meta content="LUMA PDF: crea PDF da foto, unisci PDF, digitalizza con OCR e converti documenti Word, Excel, PowerPoint o di testo in PDF, in privato nel browser." name="description"/>
 <meta content="no-referrer" name="referrer"/>
 <title>LUMA PDF — Crea, unisci e digitalizza PDF in privato</title>
 <!-- Icona ufficiale LUMA PDF: documento con L spray e scritta PDF. -->
@@ -186,15 +186,15 @@
 </section>
 <section aria-labelledby="tabDocument" hidden="" id="panelDocument" role="tabpanel">
 <section class="flow-step flow-upload doc-upload-step">
-<div class="section-heading"><div><span class="step-number">01</span><span class="section-title step-strong">Carica un documento</span><p class="step-description">Converti un documento Word o di testo direttamente nel browser.</p></div></div>
+<div class="section-heading"><div><span class="step-number">01</span><span class="section-title step-strong">Carica un documento</span><p class="step-description">Converti Word, Excel, PowerPoint e testi in PDF A4, direttamente nel browser.</p></div></div>
 <div aria-label="Seleziona un documento da convertire" class="merge-drop doc-drop" id="docDrop">
 <span aria-hidden="true" class="merge-upload-icon"><svg viewbox="0 0 24 24"><path d="M8 3H5v18h14V7l-4-4H8Z"></path><path d="M14 3v5h5M8 12h8M8 16h8"></path></svg></span>
 <strong>Trascina qui il tuo documento</strong><p>Oppure scegli un file dal dispositivo.</p>
 <button class="btn btn-primary" id="docChoose" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M12 16V3M7 8l5-5 5 5M4 16v5h16v-5"></path></svg>Carica documento</button>
-<span>Word DOCX · Testo TXT · Markdown MD</span>
+<span>Word DOCX · Excel XLSX · PowerPoint PPTX · TXT · MD</span>
 </div>
-<input accept=".docx,.txt,.md,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown" aria-label="Documento Word o testo da convertire" class="visually-hidden" id="docInput" type="file"/>
-<div class="supported-formats"><strong>Formati supportati</strong><div class="format-chips doc-chips"><span>DOCX</span><span>TXT</span><span>MD</span></div><small>Il vecchio .doc, Excel e PowerPoint non sono supportati in questa versione.</small></div>
+<input accept=".docx,.xlsx,.pptx,.txt,.md,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,text/markdown" aria-label="Documento Word, Excel, PowerPoint o testo da convertire" class="visually-hidden" id="docInput" type="file"/>
+<div class="supported-formats"><strong>Formati supportati</strong><div class="format-chips doc-chips"><span>DOCX</span><span>XLSX</span><span>PPTX</span><span>TXT</span><span>MD</span></div><small>I vecchi .doc, .xls e .ppt non sono supportati. Excel con grafici/oggetti incorporati richiede esportazione originale per non perdere contenuti.</small></div>
 </section>
 <section class="flow-step flow-pages doc-preview-step">
 <div class="section-heading"><div><span class="step-number">02</span><span class="section-title step-strong">Controlla il documento</span><p class="step-description">Verifica le pagine e soprattutto tabelle, caratteri e impaginazione.</p></div><span class="count-pill" id="docCount">Nessun file</span></div>
@@ -202,11 +202,11 @@
 <div class="doc-selected" hidden="" id="docSelected">
 <div class="doc-file-row"><span aria-hidden="true" class="merge-file-icon">DOC</span><span class="merge-file-meta"><strong class="merge-file-name" id="docFileName"></strong><small id="docFileInfo"></small></span><button class="text-action text-action-danger" id="docRemove" type="button">Rimuovi</button></div>
 <div class="doc-preview-frame" id="docPreviewFrame"><img alt="Anteprima della prima pagina del documento" hidden="" id="docPreviewImage"/><p id="docPreviewText">Preparazione dell'anteprima...</p></div>
-<p class="field-hint doc-warning">I Word complessi possono variare rispetto a Microsoft Word. Il PDF DOCX mantiene l'aspetto della pagina renderizzata ma il testo potrebbe non essere selezionabile.</p>
+<p class="field-hint doc-warning">I Word, Excel e PowerPoint complessi possono differire da Office. Excel con grafici o oggetti non riproducibili viene bloccato per evitare omissioni. Per PPTX verifica la prima diapositiva e il PDF finale. I Word complessi possono variare rispetto a Microsoft Word. Il PDF DOCX mantiene l'aspetto della pagina renderizzata ma il testo potrebbe non essere selezionabile.</p>
 </div>
 </section>
 <section class="flow-step flow-settings doc-settings-step">
-<div class="section-heading section-heading-workspace"><div><span class="step-number">03</span><span class="section-title step-strong">Converti in PDF</span><p class="step-description">Scegli il nome e crea il documento in formato A4.</p></div></div>
+<div class="section-heading section-heading-workspace"><div><span class="step-number">03</span><span class="section-title step-strong">Converti in PDF</span><p class="step-description">Scegli il nome e crea il PDF in formato A4 ad alta qualità.</p></div></div>
 <div class="settings-panel">
 <div class="filename-group"><label class="field-label" for="docFilename">Nome del documento <span class="required-mark">Obbligatorio *</span></label><div class="input-wrap"><input autocomplete="off" id="docFilename" maxlength="80" placeholder="Inserisci il nome del PDF" required="" spellcheck="false" type="text"/><span class="file-ext">.pdf</span></div><span class="field-hint">Il nome non è preimpostato.</span></div>
 <div class="advanced-panel"><button aria-controls="docAdvancedContent" aria-expanded="false" class="advanced-toggle" id="docAdvancedToggle" type="button"><span aria-hidden="true" class="advanced-symbol">⚙</span><span class="advanced-toggle-copy"><strong>Impostazioni documento</strong><small id="docAdvancedSummary">A4 · Pagina completa</small></span><span aria-hidden="true" class="advanced-down">⌄</span></button><div class="advanced-content" hidden="" id="docAdvancedContent"><label class="field-label field-label-spaced" for="docSizing">Riempimento A4</label><div class="select-wrap"><select id="docSizing"><option value="contain">Pagina completa · senza tagli (consigliato)</option><option value="cover">A4 pieno · possibili tagli</option></select></div><span class="field-hint">Usa «senza tagli» per documenti con tabelle, firme e numeri importanti.</span></div></div>
@@ -214,7 +214,7 @@
 <button class="btn btn-generate" disabled="" id="docGenerate" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M7 3h8l5 5v13H4V3h3Z"></path><path d="M14 3v6h6M8 14h8M8 18h8"></path></svg><span id="docGenerateLabel">Converti e scarica PDF</span></button>
 <div class="progress-area" hidden="" id="docProgress"><div class="progress-track"><div id="docProgressBar"></div></div><span aria-live="polite" id="docProgressText">Conversione in corso...</span></div>
 <div aria-live="polite" class="result-message" hidden="" id="docResult" role="status"></div>
-<p class="download-note">Il documento viene letto e convertito nel browser. Controlla l'anteprima e il PDF, soprattutto con tabelle e grafici.</p>
+<p class="download-note">Conversione privata e locale. Excel con testo vettoriale nitido; PowerPoint con immagini PNG HD. Verifica sempre tabelle, font e grafici Office.</p>
 </div>
 </section>
 </section>
@@ -242,5 +242,5 @@
 </div>
 </div>
 <div aria-live="polite" class="toast" hidden="" id="toast" role="status"></div>
-<script defer="" src="./vendor/jszip.min.js"></script><script defer="" src="./vendor/docx-preview.min.js"></script><script defer="" src="./vendor/html2canvas.min.js"></script><script defer="" src="./document-convert-ui.js"></script></body>
+<script defer="" src="./vendor/jszip.min.js"></script><script defer="" src="./vendor/docx-preview.min.js"></script><script defer="" src="./vendor/html2canvas.min.js"></script><script defer="" src="./vendor/exceljs.min.js"></script><script defer="" src="./office-convert.js"></script><script defer="" src="./document-convert-ui.js"></script></body>
 </html>
